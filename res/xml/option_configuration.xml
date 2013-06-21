@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+	<PreferenceCategory android:title="Configurez Yuri">
+		<EditTextPreference
+			android:key="IPadress"
+			android:title="Adresse de la page"
+			android:defaultValue="@string/IPadress"
+			android:summary="Entrez l'adresse de votre page (sans http://)">
+		</EditTextPreference>
+		<CheckBoxPreference
+		    android:key="tts_pref"
+		    android:title="Activer TTS"
+		    android:summary="Cochez pour activer le TTS"
+		    android:defaultValue="True" />
+		<CheckBoxPreference
+		    android:key="shake"
+		    android:title="Activer le Shake"
+		    android:summary="Cochez pour activer le Shake"
+		    android:defaultValue="True" />
+	</PreferenceCategory>
+	
+	
+	<PreferenceCategory
+	    android:title="Category Title"
+   		android:layout="@layout/merci" />
+</PreferenceScreen>
