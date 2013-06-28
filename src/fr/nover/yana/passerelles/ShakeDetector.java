@@ -1,4 +1,4 @@
-package fr.nover.yana;
+package fr.nover.yana.passerelles;
 
 import android.annotation.SuppressLint;
 import android.hardware.Sensor;
@@ -10,7 +10,7 @@ import android.util.FloatMath;
 public class ShakeDetector implements SensorEventListener {
 
     // The gForce that is necessary to register as shake. Must be greater than 1G (one earth gravity unit)
-    private static final float SHAKE_THRESHOLD_GRAVITY = 2.7F;
+    private static float SHAKE_THRESHOLD_GRAVITY = 2.7F;
     private static final int SHAKE_SLOP_TIME_MS = 500;
     private static final int SHAKE_COUNT_RESET_TIME_MS = 3000;
 
@@ -66,4 +66,7 @@ public class ShakeDetector implements SensorEventListener {
             }
         }
     }
+    public static void getConfig(float Shake_sens){
+    	if(Shake_sens<1){SHAKE_THRESHOLD_GRAVITY=3;}
+    	else{SHAKE_THRESHOLD_GRAVITY=Shake_sens;}}
 }

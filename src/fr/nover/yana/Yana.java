@@ -19,7 +19,6 @@ import android.os.StrictMode;
 import android.preference.PreferenceManager;
 import android.speech.RecognizerIntent;
 import android.speech.tts.TextToSpeech;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -32,18 +31,9 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import java.util.ArrayList;
-import java.util.List;
 
-import org.apache.http.HttpEntity;
-import org.apache.http.HttpResponse;
-import org.apache.http.NameValuePair;
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.entity.UrlEncodedFormEntity;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.impl.client.DefaultHttpClient;
-import org.apache.http.message.BasicNameValuePair;
-import org.apache.http.protocol.HTTP;
-import org.apache.http.util.EntityUtils;
+import fr.nover.yana.passerelles.Contact_RPi;
+import fr.nover.yana.passerelles.ShakeDetector;
 
 @TargetApi(Build.VERSION_CODES.GINGERBREAD)
 @SuppressLint("NewApi")
@@ -60,7 +50,8 @@ public class Yana extends Activity implements TextToSpeech.OnInitListener {
 	    
     	// A propos du Service (Intent pour le lancer et servstate pour savoir l'état du service)
 	private Intent ShakeService;
-	static boolean servstate=false;;
+	static boolean servstate=false;
+	boolean Box_TTS;
 	    
 	    // Juste une valeur fixe de référence pour le résultat d'Activités lancées
 	protected static final int RESULT_SPEECH = 1;
@@ -106,32 +97,17 @@ public class Yana extends Activity implements TextToSpeech.OnInitListener {
 
 			Recrep= text.get(0);
 			conversation(Recrep, true);
-				
-			String IPAdress = IPadress.getText().toString();
-				
-				// Début de l'envoie au serveur
-			HttpClient httpclient = new DefaultHttpClient();
-			HttpPost httppost = new HttpPost("http://"+IPAdress);
-
-			try {
-			        // Prépare les variables et les envoient
-			    List<NameValuePair> nameValuePairs = new ArrayList<NameValuePair>(2);
-			    nameValuePairs.add(new BasicNameValuePair("message", Recrep));
-			    httppost.setEntity(new UrlEncodedFormEntity(nameValuePairs, HTTP.UTF_8));
-
-			        // Reçoit la réponse
-			    HttpResponse responsePOST = httpclient.execute(httppost);
-			    HttpEntity httpreponse = responsePOST.getEntity();
-			    String result = EntityUtils.toString(httpreponse).trim(); // La transforme en string
-			    Rep=result;
-			    conversation(result, false);}
-			catch(Exception e){
-			        Log.e("log_tag", "Error in http connection"+e.toString());}
-		        
-		    SharedPreferences preferences= PreferenceManager.getDefaultSharedPreferences(this);
-			if (preferences.getBoolean("tts_pref", true)==true){
+			Rep="";
+			
+			android.os.SystemClock.sleep(1000);
+			Rep=Contact_RPi.HTTP_Send(Recrep,false);
+			conversation(Rep,false);
+			
+			while(Recrep==""){android.os.SystemClock.sleep(1000);}
+			
+			if (Box_TTS==true){
 			    	getTTS();}
-		     }
+		    }
 			break;}
 	
 			case OPTION: {getConfig();}
@@ -170,12 +146,13 @@ public class Yana extends Activity implements TextToSpeech.OnInitListener {
     	String V_string=preferences.getString("IPadress", "");
     	if(V_string != ""){
     		IPadress.setText(V_string);}
+    	Contact_RPi.IP_adress=V_string;
     		
-    	boolean Box_tts=preferences.getBoolean("tts_pref", true);
-    	if(Box_tts==false){
+    	Box_TTS=preferences.getBoolean("tts_pref", true);
+    	if(Box_TTS==false){
     		tts_pref_false.setText("Attention ! Votre TTS est désactivé.");}
     	else{
-    		tts_pref_false.setText(" ");}
+    		tts_pref_false.setText("");}
     		
     	ShakeService=new Intent(Yana.this, ShakeService.class);
     	boolean Box_shake=preferences.getBoolean("shake", true);
@@ -184,6 +161,14 @@ public class Yana extends Activity implements TextToSpeech.OnInitListener {
     		
     	if((Box_shake==false) && servstate==true){
     		stopService(ShakeService);}
+    	
+    	float Shake_sens=Float.parseFloat(preferences.getString("shake_sens", "3.0f"));
+		if(Shake_sens<=1)   { 		
+			Toast t = Toast.makeText(getApplicationContext(),
+			"Attention ! Votre sensibilité de Shake est trop basse donc elle a été réhaussée à 3.",
+			Toast.LENGTH_SHORT);
+        	t.show();}
+		ShakeDetector.getConfig(Shake_sens);
          }
     	
     public void getTTS(){

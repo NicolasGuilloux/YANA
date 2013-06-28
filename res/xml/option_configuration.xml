@@ -18,6 +18,13 @@
 		    android:title="Activer le Shake"
 		    android:summary="Cochez pour activer le Shake"
 		    android:defaultValue="True" />
+		<EditTextPreference
+			android:key="shake_sens"
+			android:title="Sensibilité du Shake"
+			android:defaultValue="3.0"
+			android:inputType="numberDecimal" 
+			android:summary="Augmentez pour le rendre moins sensible">
+		</EditTextPreference>
 	</PreferenceCategory>
 	
 	

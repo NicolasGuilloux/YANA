@@ -43,20 +43,15 @@ public final class R {
         public static final int menu=0x7f090000;
     }
     public static final class string {
-        public static final int IPADRESSINFO=0x7f07000b;
         public static final int IPadress=0x7f070003;
-        public static final int IPadressinfo=0x7f070004;
-        public static final int Merci=0x7f070009;
-        public static final int Recinfo=0x7f070006;
-        public static final int Recrepinfo=0x7f070007;
-        public static final int Repinfo=0x7f070008;
-        public static final int Soninfo=0x7f070005;
-        public static final int Suivant=0x7f07000c;
+        public static final int Merci=0x7f070006;
+        public static final int Recinfo=0x7f070005;
+        public static final int Soninfo=0x7f070004;
+        public static final int Suivant=0x7f070008;
         public static final int app_name=0x7f070000;
         public static final int bienvenue=0x7f070002;
-        public static final int bienvenue_first=0x7f07000a;
+        public static final int bienvenue_first=0x7f070007;
         public static final int configuration=0x7f070001;
-        public static final int imageContentDescription=0x7f07000d;
     }
     public static final class style {
         /** 

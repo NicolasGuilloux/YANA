@@ -1,4 +1,4 @@
-package fr.nover.yana;
+package fr.nover.yana.passerelles;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;
