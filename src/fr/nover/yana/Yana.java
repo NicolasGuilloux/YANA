@@ -1,8 +1,8 @@
 /**
-Cette application a été développée par Nicolas -Nover- Guilloux.
-Elle a été créée afin d'interagir avec YURI, lui-même créé par Idleman.
-Trouvez les travaux d'Idleman ici : http://blog.idleman.fr/?p=1788
-Vous pouvez me contacter à cette adresse : Etsu@live.fr
+*Cette application a été développée par Nicolas -Nover- Guilloux.
+*Elle a été créée afin d'interagir avec YANA, lui-même créé par Idleman.
+*Trouvez les travaux d'Idleman ici : http://blog.idleman.fr/?p=1788
+*Vous pouvez me contacter à cette adresse : Etsu@live.fr
 **/
 
 package fr.nover.yana;
@@ -11,7 +11,10 @@ import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
 import android.app.Activity;
 import android.content.ActivityNotFoundException;
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.os.Build;
 import android.os.Bundle;
@@ -19,6 +22,8 @@ import android.os.StrictMode;
 import android.preference.PreferenceManager;
 import android.speech.RecognizerIntent;
 import android.speech.tts.TextToSpeech;
+import android.support.v4.content.LocalBroadcastManager;
+import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -27,12 +32,13 @@ import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
+import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import java.util.ArrayList;
 
-import fr.nover.yana.passerelles.Contact_RPi;
+import fr.nover.yana.passerelles.Traitement;
 import fr.nover.yana.passerelles.ShakeDetector;
 
 @TargetApi(Build.VERSION_CODES.GINGERBREAD)
@@ -52,14 +58,25 @@ public class Yana extends Activity implements TextToSpeech.OnInitListener {
 	private Intent ShakeService;
 	static boolean servstate=false;
 	boolean Box_TTS;
+		// Conversation
+	int n=1;
+	
+	private BroadcastReceiver NewRecrep = new BroadcastReceiver() {
+		  @Override
+		  public void onReceive(Context context, Intent intent) {
+			String contenu = intent.getStringExtra("contenu");
+			conversation(contenu, "envoi");}};
+			
+	private BroadcastReceiver NewRep = new BroadcastReceiver() {
+		  @Override
+		  public void onReceive(Context context, Intent intent) {
+			String contenu = intent.getStringExtra("contenu");
+			conversation(contenu, "reponse");}};
 	    
 	    // Juste une valeur fixe de référence pour le résultat d'Activités lancées
+	
 	protected static final int RESULT_SPEECH = 1;
 	protected static final int OPTION = 2;
-	protected static final int TTS = 3;
-	
-		// Conversation
-	public int n=1;
 	
 	@SuppressLint("NewApi")
 	public void onCreate(Bundle savedInstanceState){
@@ -67,6 +84,11 @@ public class Yana extends Activity implements TextToSpeech.OnInitListener {
 	    //requestWindowFeature(Window.FEATURE_NO_TITLE);
 	    //getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
 	    setContentView(R.layout.interface_yana);
+	    
+	   LocalBroadcastManager.getInstance(this).registerReceiver(NewRecrep,
+				new IntentFilter("NewRecrep"));
+	   LocalBroadcastManager.getInstance(this).registerReceiver(NewRep,
+				new IntentFilter("NewRep"));
 	    
     	IPadress = (EditText)findViewById(R.id.IPadress);
     	tts_pref_false = (TextView) findViewById(R.id.tts_pref_false);
@@ -76,6 +98,16 @@ public class Yana extends Activity implements TextToSpeech.OnInitListener {
     	StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
     	StrictMode.setThreadPolicy(policy);
     	getConfig();
+    	
+    	/**if(Traitement.pick_JSON(IPadress.getText().toString())){
+    		Toast toast= Toast.makeText(getApplicationContext(), 
+    				"Update fait !", Toast.LENGTH_SHORT);  
+    				toast.setGravity(Gravity.TOP|Gravity.CENTER_HORIZONTAL, 0, 0);
+    				toast.show();}
+    	else{Toast toast= Toast.makeText(getApplicationContext(), 
+				"Echec de l'update. Vérifiez l'adresse enregistrée et l'état du Raspberry Pi.", Toast.LENGTH_SHORT);  
+				toast.setGravity(Gravity.TOP|Gravity.CENTER_HORIZONTAL, 0, 0);
+				toast.show();}**/
     	
     	ip_adress.setOnClickListener(new View.OnClickListener() {	
     		@Override
@@ -94,30 +126,38 @@ public class Yana extends Activity implements TextToSpeech.OnInitListener {
 		if (resultCode == RESULT_OK && null != data) {
 
 			ArrayList<String> text = data.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);
-
 			Recrep= text.get(0);
-			conversation(Recrep, true);
+			
+			/** 
+			int n = Traitement.Comparaison(Recrep);
+			if(n<0){
+				
+				break;}
+			String Ordre = Traitement.Commandes.get(n);
+			String URL = Traitement.Liens.get(n);
+			**/
+			
+			String Ordre = Recrep;
+			conversation(Ordre, "envoi");
 			Rep="";
 			
 			android.os.SystemClock.sleep(1000);
-			Rep=Contact_RPi.HTTP_Send(Recrep,false);
-			conversation(Rep,false);
+			Rep=Traitement.HTTP_Send(Ordre,IPadress.getText().toString());
 			
-			while(Recrep==""){android.os.SystemClock.sleep(1000);}
+			// Rep = Taitrement.HTTP_Contact(URL);
 			
-			if (Box_TTS==true){
-			    	getTTS();}
+			conversation(Rep, "reponse");
+			
+			while(Rep==""){android.os.SystemClock.sleep(1000);}
+			
+			if(Box_TTS==true){
+				mTts = new TextToSpeech(this, this);}
 		    }
 			break;}
 	
 			case OPTION: {getConfig();}
-			
-			case TTS:{
-	            if (resultCode == TextToSpeech.Engine.CHECK_VOICE_DATA_PASS){
-	                    // success, create the TTS instance
-	                mTts = new TextToSpeech(this, this);}
 	        }
-	}}
+	}
 
 	public void onInit(int i){
     	// S'exécute dès la création du mTts
@@ -139,6 +179,16 @@ public class Yana extends Activity implements TextToSpeech.OnInitListener {
 		// Il dit que si on clique sur tel objet, on effectue telle action
 		if(item.getItemId() == R.id.configuration){
 			startActivityForResult(new Intent(this, Configuration.class), OPTION);}
+		if(item.getItemId() == R.id.update){
+			if(Traitement.pick_JSON(IPadress.getText().toString())){
+	    		Toast toast= Toast.makeText(getApplicationContext(), 
+	    				"Update fait !", Toast.LENGTH_SHORT);  
+	    				toast.setGravity(Gravity.TOP|Gravity.CENTER_HORIZONTAL, 0, 0);
+	    				toast.show();}
+	    	else{Toast toast= Toast.makeText(getApplicationContext(), 
+					"Echec de l'update. Vérifiez l'adresse enregistrée et l'état du Raspberry Pi.", Toast.LENGTH_SHORT);  
+					toast.setGravity(Gravity.TOP|Gravity.CENTER_HORIZONTAL, 0, 0);
+					toast.show();}}
 		return super.onOptionsItemSelected(item);}
 
     public void getConfig(){
@@ -146,7 +196,6 @@ public class Yana extends Activity implements TextToSpeech.OnInitListener {
     	String V_string=preferences.getString("IPadress", "");
     	if(V_string != ""){
     		IPadress.setText(V_string);}
-    	Contact_RPi.IP_adress=V_string;
     		
     	Box_TTS=preferences.getBoolean("tts_pref", true);
     	if(Box_TTS==false){
@@ -162,19 +211,20 @@ public class Yana extends Activity implements TextToSpeech.OnInitListener {
     	if((Box_shake==false) && servstate==true){
     		stopService(ShakeService);}
     	
+    	Traitement.Voice_Sens = Double.parseDouble(preferences.getString("Voice_sens", "7.0"))* Math.pow(10.0,-1.0);
+    	if (Traitement.Voice_Sens>=1){
+    		Toast t = Toast.makeText(getApplicationContext(),
+    				"Attention ! La sensibilité d'analyse de la voix est trop forte. Votre programme choisira la commande la plus proche de votre ordre. Pour mettre une sensibilité, votre valeur dans les options doit être inférieure à 10. ",
+    				Toast.LENGTH_SHORT);
+    	        	t.show();}
+    	
     	float Shake_sens=Float.parseFloat(preferences.getString("shake_sens", "3.0f"));
 		if(Shake_sens<=1)   { 		
 			Toast t = Toast.makeText(getApplicationContext(),
 			"Attention ! Votre sensibilité de Shake est trop basse donc elle a été réhaussée à 3.",
 			Toast.LENGTH_SHORT);
         	t.show();}
-		ShakeDetector.getConfig(Shake_sens);
-         }
-    	
-    public void getTTS(){
-    	Intent checkIntent = new Intent();
-        checkIntent.setAction(TextToSpeech.Engine.ACTION_CHECK_TTS_DATA); // Va vérifier si il y a un TTS de disponible
-        startActivityForResult(checkIntent, TTS);}
+		ShakeDetector.getConfig(Shake_sens);}
         
     public void Initialisation(){
         Intent intent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
@@ -193,8 +243,9 @@ public class Yana extends Activity implements TextToSpeech.OnInitListener {
     public static void ServiceState(boolean etat){
 		servstate=etat;}
 
-    public void conversation(String Texte, boolean Envoi){
-    	View Conversation_layout =  findViewById(R.id.conversation);
+    public void conversation(String Texte, String Envoi){
+    	
+    	final View Conversation_layout =  findViewById(R.id.conversation);
     	
         TextView valueTV = new TextView(this);
         valueTV.setText(Texte);
@@ -205,7 +256,7 @@ public class Yana extends Activity implements TextToSpeech.OnInitListener {
         RelativeLayout.LayoutParams params = new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.WRAP_CONTENT, RelativeLayout.LayoutParams.WRAP_CONTENT);
         RelativeLayout.LayoutParams params_fleche = new RelativeLayout.LayoutParams(20, 20);
         	
-        if(Envoi){
+        if(Envoi=="envoi"){
         	fleche.setImageResource(R.drawable.envoi);
         	params_fleche.addRule(RelativeLayout.ALIGN_PARENT_RIGHT);
         	params_fleche.addRule(RelativeLayout.ALIGN_BOTTOM, n);
@@ -234,6 +285,9 @@ public class Yana extends Activity implements TextToSpeech.OnInitListener {
         valueTV.setLayoutParams(params);
         fleche.setLayoutParams(params_fleche);
         ((ViewGroup) Conversation_layout).addView(valueTV);
-        ((ViewGroup) Conversation_layout).addView(fleche);}
-
+        ((ViewGroup) Conversation_layout).addView(fleche);
+        
+        ((ScrollView) findViewById(R.id.conversation_scroll)).post(new Runnable(){
+            public void run(){((ScrollView) findViewById(R.id.conversation_scroll)).fullScroll(View.FOCUS_DOWN);}}); // Pour ancrer en bas à chaque nouvel ordre
+    	}
 }

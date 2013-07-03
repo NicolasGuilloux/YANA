@@ -6,6 +6,7 @@
     <string name="IPadress">192.168.1.x/hcc3/action.php</string>
     <string name="Soninfo">Voulez-vous une réponse audio ?</string>
     <string name="Recinfo">Cliquez pour donner un ordre</string>
+    <string name="update">Update des commandes</string>
     <string name="Merci">Merci d\'utiliser cette application. Elle a été développée par Nicolas -Nover- Guilloux et est prévue pour l\'installation d\'Idleman qui utilise le Raspberry Pi.</string>
     <string name="bienvenue_first">Bienvenue sur l\'application "Yana". Elle vous permettra de dialoguer via commandes vocales à votre Raspberry Pi. \nPour plus amples informations sur ce système, veuillez visiter le blog de Idleman. \n\nBonjour ! Je suis Yana. Ceci est mon premier lancement. Nous allons donc configurer ensemble cette application !</string>
     <string name="Suivant">Suivant</string>

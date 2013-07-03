@@ -1,8 +1,8 @@
 /**
-Cette application a été développée par Nicolas -Nover- Guilloux.
-Elle a été créée afin d'interagir avec YURI, lui-même créé par Idleman.
-Trouvez les travaux d'Idleman ici : http://blog.idleman.fr/?p=1788
-Vous pouvez me contacter à cette adresse : Etsu@live.fr
+*Cette application a été développée par Nicolas -Nover- Guilloux.
+*Elle a été créée afin d'interagir avec YANA, lui-même créé par Idleman.
+*Trouvez les travaux d'Idleman ici : http://blog.idleman.fr/?p=1788
+*Vous pouvez me contacter à cette adresse : Etsu@live.fr
 **/
 
 package fr.nover.yana;

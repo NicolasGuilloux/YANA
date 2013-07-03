@@ -37,7 +37,8 @@
         android:layout_above="@+id/tts_pref_false"
         android:layout_alignLeft="@+id/btnRec"
         android:layout_alignRight="@+id/btnRec"
-        android:layout_below="@+id/ip_adress" >
+        android:layout_below="@+id/ip_adress"
+        android:id="@+id/conversation_scroll" >
 
 	    <RelativeLayout
 	        android:layout_width="fill_parent"

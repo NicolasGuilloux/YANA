@@ -8,6 +8,13 @@
 			android:defaultValue="@string/IPadress"
 			android:summary="Entrez l'adresse de votre page (sans http://)">
 		</EditTextPreference>
+		<EditTextPreference
+			android:key="Voice_sens"
+			android:title="Sensibilité de l'ordre"
+			android:defaultValue="7.0"
+			android:inputType="numberDecimal" 
+			android:summary="Augmentez pour le rendre plus sensible">
+		</EditTextPreference>
 		<CheckBoxPreference
 		    android:key="tts_pref"
 		    android:title="Activer TTS"

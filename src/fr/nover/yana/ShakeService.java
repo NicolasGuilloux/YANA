@@ -1,3 +1,10 @@
+/**
+*Cette application a été développée par Nicolas -Nover- Guilloux.
+*Elle a été créée afin d'interagir avec YANA, lui-même créé par Idleman.
+*Trouvez les travaux d'Idleman ici : http://blog.idleman.fr/?p=1788
+*Vous pouvez me contacter à cette adresse : Etsu@live.fr
+**/
+
 package fr.nover.yana;
 
 import android.annotation.SuppressLint;
@@ -18,19 +25,19 @@ import android.preference.PreferenceManager;
 import android.speech.RecognitionListener;
 import android.speech.RecognizerIntent;
 import android.speech.SpeechRecognizer;
+import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
+import android.widget.Toast;
 
 import java.util.ArrayList;
 import java.util.Random;
 import java.util.Timer;
 import java.util.TimerTask;
 
-import fr.nover.yana.passerelles.Contact_RPi;
+import fr.nover.yana.passerelles.Traitement;
 import fr.nover.yana.passerelles.ScreenReceiver;
 import fr.nover.yana.passerelles.ShakeDetector;
 import fr.nover.yana.passerelles.ShakeDetector.OnShakeListener;
-
-import android.widget.Toast;
 
 @SuppressLint("NewApi")
 public class ShakeService extends Service implements TextToSpeech.OnInitListener, RecognitionListener{
@@ -50,16 +57,20 @@ public class ShakeService extends Service implements TextToSpeech.OnInitListener
 		// Logger tag
  	private static final String TAG="";
  		// Speech recognizer instance
- 	private SpeechRecognizer speech = null;
+ 	private static SpeechRecognizer speech = null;
  		// Timer used as timeout for the speech recognition
  	private Timer speechTimeout = null;
+ 	
+ 	public static String IPadress;
+ 	
+ 	Intent NewRecrep = new Intent("NewRecrep");
+ 	Intent NewRep = new Intent("NewRep");
      
  		// Timer task used to reproduce the timeout input error that seems not be called on android 4.1.2
 	public class SilenceTimer extends TimerTask {
 		@Override
 		public void run() {
-			onError(SpeechRecognizer.ERROR_SPEECH_TIMEOUT);
-			fin();}
+			onError(SpeechRecognizer.ERROR_SPEECH_TIMEOUT);}
 	}
 	
 	public void onCreate(){
@@ -83,10 +94,7 @@ public class ShakeService extends Service implements TextToSpeech.OnInitListener
         final IntentFilter filter = new IntentFilter(Intent.ACTION_SCREEN_ON);
         filter.addAction(Intent.ACTION_SCREEN_OFF);
         final BroadcastReceiver mReceiver = new ScreenReceiver();
-        registerReceiver(mReceiver, filter);
-        
-        
-     }
+        registerReceiver(mReceiver, filter);}
 
     public void onDestroy() {
         super.onDestroy();
@@ -104,6 +112,7 @@ public class ShakeService extends Service implements TextToSpeech.OnInitListener
     
 	public void onInit(int status) {
 		SharedPreferences preferences= PreferenceManager.getDefaultSharedPreferences(this);
+    	IPadress = Traitement.HTTP_Send(Resultat,preferences.getString("IPadress", ""));
     	
 		Toast t = Toast.makeText(getApplicationContext(),A_dire,Toast.LENGTH_SHORT);
 		t.show();
@@ -133,6 +142,7 @@ public class ShakeService extends Service implements TextToSpeech.OnInitListener
 		last_init=true;
 		Intent intent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
 		intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL,RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
+		intent.putExtra(RecognizerIntent.EXTRA_CALLING_PACKAGE,"fr.nover.yana");
 		getSpeechRevognizer().startListening(intent);}
 
 	public void stopVoiceRecognition(){
@@ -154,12 +164,13 @@ public class ShakeService extends Service implements TextToSpeech.OnInitListener
 		// Cancel the timeout because voice is arriving
 		speechTimeout.cancel();}
 
-	public void onBufferReceived(byte[] buffer) {Log.d(TAG,"onBufferReceived");}
+	public void onBufferReceived(byte[] buffer) {}
 
 	public void onEndOfSpeech() {Log.d(TAG,"onEndOfSpeech");}
 
 	public void onError(int error) {
 		String message;
+		fin();
 		switch (error){
 			case SpeechRecognizer.ERROR_AUDIO:
 				message = "Erreur d'enregistrement audio";
@@ -196,19 +207,23 @@ public class ShakeService extends Service implements TextToSpeech.OnInitListener
 		Toast t = Toast.makeText(getApplicationContext(),
 				"Annulé : " + message.toString().toString(),
 				Toast.LENGTH_SHORT);
-		t.show();
-		fin();}
+		t.show();}
 
 	public void onResults(Bundle results) {
 		String Resultat = results.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION).get(0).toString();
 		Log.d(TAG,"Ordre : " + Resultat);
 		A_dire="";
+	 	
+		NewRecrep.putExtra("contenu", Resultat);
+	 	LocalBroadcastManager.getInstance(this).sendBroadcast(NewRecrep);
 		
-		if(Resultat.contains("Yana") || Resultat.contains("Iliana") || Resultat.contains("Diana")){A_dire=Contact_RPi.HTTP_Send(Resultat,true);}
-		else{A_dire="Vous n'avez pas dit Yuri !";}
+		if(Resultat.contains("Yana") || Resultat.contains("Iliana") || Resultat.contains("Diana") || Resultat.contains("Yann")){A_dire=IPadress;}
+		else{A_dire="Vous n'avez pas dit Yana !";}
 		
 		while(A_dire==""){android.os.SystemClock.sleep(1000);}
-		
+		NewRep.putExtra("contenu", A_dire);
+	 	LocalBroadcastManager.getInstance(this).sendBroadcast(NewRep);
+
 		getTTS();}
 
 	public void onRmsChanged(float rmsdB) {}
@@ -225,8 +240,7 @@ public class ShakeService extends Service implements TextToSpeech.OnInitListener
 		int randomInt = random.nextInt(list.size());
         String Retour = list.get(randomInt).toString();
 		
-		return Retour;
-	}
+		return Retour;}
 
 	public void onEvent(int arg0, Bundle arg1){}
 
@@ -235,5 +249,5 @@ public class ShakeService extends Service implements TextToSpeech.OnInitListener
 		last_shake=last_init=false;
 		mTts.stop();
         mTts.shutdown();}
-
+	
 }
