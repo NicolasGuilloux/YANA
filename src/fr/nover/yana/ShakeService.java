@@ -17,6 +17,7 @@ import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.hardware.Sensor;
 import android.hardware.SensorManager;
+import android.media.AudioManager;
 import android.os.Build;
 import android.os.IBinder;
 import android.speech.tts.TextToSpeech;
@@ -30,6 +31,7 @@ import android.util.Log;
 import android.widget.Toast;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Random;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -52,7 +54,7 @@ public class ShakeService extends Service implements TextToSpeech.OnInitListener
 	String A_envoyer,Resultat="";
     
     String A_dire="";
-    Boolean last_init=false, last_shake=false, Yuri=true;
+    Boolean last_init=false, last_shake=false, Yuri=true, TTS_utilise=false;
     
 		// Logger tag
  	private static final String TAG="";
@@ -60,8 +62,6 @@ public class ShakeService extends Service implements TextToSpeech.OnInitListener
  	private static SpeechRecognizer speech = null;
  		// Timer used as timeout for the speech recognition
  	private Timer speechTimeout = null;
- 	
- 	public static String IPadress;
  	
  	Intent NewRecrep = new Intent("NewRecrep");
  	Intent NewRep = new Intent("NewRep");
@@ -112,16 +112,19 @@ public class ShakeService extends Service implements TextToSpeech.OnInitListener
     
 	public void onInit(int status) {
 		SharedPreferences preferences= PreferenceManager.getDefaultSharedPreferences(this);
-    	IPadress = Traitement.HTTP_Send(Resultat,preferences.getString("IPadress", ""));
-    	
 		Toast t = Toast.makeText(getApplicationContext(),A_dire,Toast.LENGTH_SHORT);
 		t.show();
+		
 		if(preferences.getBoolean("tts_pref", true)==true){
-			mTts.speak(A_dire,TextToSpeech.QUEUE_FLUSH,null);}
+	            
+			HashMap<String, String> myHashAlarm = new HashMap<String, String>();
+            myHashAlarm.put(TextToSpeech.Engine.KEY_PARAM_STREAM, String.valueOf(AudioManager.STREAM_ALARM));
+            myHashAlarm.put(TextToSpeech.Engine.KEY_PARAM_UTTERANCE_ID, "SOME MESSAGE");
+			mTts.speak(A_dire,TextToSpeech.QUEUE_FLUSH, myHashAlarm);
 		if(last_init==false){
 			android.os.SystemClock.sleep(1000);
 			startVoiceRecognitionCycle();}
-		else{fin();}
+		else{fin();}}
 		}
 	
 	public void getTTS(){mTts = new TextToSpeech(this, this);}
@@ -213,12 +216,18 @@ public class ShakeService extends Service implements TextToSpeech.OnInitListener
 		String Resultat = results.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION).get(0).toString();
 		Log.d(TAG,"Ordre : " + Resultat);
 		A_dire="";
-	 	
-		NewRecrep.putExtra("contenu", Resultat);
-	 	LocalBroadcastManager.getInstance(this).sendBroadcast(NewRecrep);
 		
-		if(Resultat.contains("Yana") || Resultat.contains("Iliana") || Resultat.contains("Diana") || Resultat.contains("Yann")){A_dire=IPadress;}
-		else{A_dire="Vous n'avez pas dit Yana !";}
+		String Ordre="";
+		int n = Traitement.Comparaison(Resultat);
+		if(n<0){Ordre=Resultat;}
+		else{Ordre = Traitement.Commandes.get(n);}
+	 	
+		NewRecrep.putExtra("contenu", Ordre);
+	 	LocalBroadcastManager.getInstance(this).sendBroadcast(NewRecrep);
+	 	
+	 	SharedPreferences preferences= PreferenceManager.getDefaultSharedPreferences(this);
+    	String IPAdress=preferences.getString("IPadress", "");
+		A_dire=Traitement.HTTP_Send(Ordre,IPAdress);
 		
 		while(A_dire==""){android.os.SystemClock.sleep(1000);}
 		NewRep.putExtra("contenu", A_dire);
@@ -245,9 +254,6 @@ public class ShakeService extends Service implements TextToSpeech.OnInitListener
 	public void onEvent(int arg0, Bundle arg1){}
 
 	public void fin(){
-		android.os.SystemClock.sleep(3000);
-		last_shake=last_init=false;
-		mTts.stop();
-        mTts.shutdown();}
+		last_shake=last_init=false;}
 	
 }

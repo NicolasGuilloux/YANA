@@ -43,7 +43,7 @@ import fr.nover.yana.passerelles.ShakeDetector;
 
 @TargetApi(Build.VERSION_CODES.GINGERBREAD)
 @SuppressLint("NewApi")
-public class Yana extends Activity implements TextToSpeech.OnInitListener {
+public class Yana extends Activity implements TextToSpeech.OnInitListener{
 	
 	static EditText IPadress; // Affiche et stocke l'adresse IP
 	static TextView tts_pref_false; // Affichage pour prévenir de l'état du TTS
@@ -60,6 +60,7 @@ public class Yana extends Activity implements TextToSpeech.OnInitListener {
 	boolean Box_TTS;
 		// Conversation
 	int n=1;
+	int m=999;
 	
 	private BroadcastReceiver NewRecrep = new BroadcastReceiver() {
 		  @Override
@@ -99,16 +100,48 @@ public class Yana extends Activity implements TextToSpeech.OnInitListener {
     	StrictMode.setThreadPolicy(policy);
     	getConfig();
     	
-    	/**if(Traitement.pick_JSON(IPadress.getText().toString())){
+    	Traitement.Commandes.add("Test.");
+    	Traitement.Confidences.add("0.2");
+    	Traitement.Commandes.add("Tu beug ?");
+    	Traitement.Confidences.add("0.2");
+    	Traitement.Commandes.add("Lance Facebook.");
+    	Traitement.Confidences.add("0.2");
+    	Traitement.Commandes.add("Ouvre Google Chrome.");
+    	Traitement.Confidences.add("0.2");
+    	Traitement.Commandes.add("Ouvre Word.");
+    	Traitement.Confidences.add("0.2");
+    	Traitement.Commandes.add("Ouvre Skype.");
+    	Traitement.Confidences.add("0.2");
+    	Traitement.Commandes.add("Ouvre Firefox.");
+    	Traitement.Confidences.add("0.2");
+    	Traitement.Commandes.add("Ouvre Excel.");
+    	Traitement.Confidences.add("0.2");
+    	Traitement.Commandes.add("Ouvre mes Documents.");
+    	Traitement.Confidences.add("0.2");
+    	Traitement.Commandes.add("Ouvre iTunes.");
+    	Traitement.Confidences.add("0.01");
+    	
+    	for(int i=0; i<Traitement.Commandes.size(); i++){Commandes_Layout(Traitement.Commandes.get(i), i);}
+		for(int i=m; i>Traitement.Commandes.size()+1000; i--){
+		    TextView valueTV=(TextView) findViewById(i);
+		    valueTV.setText("");}
+		
+    	if(Traitement.pick_JSON(IPadress.getText().toString())){
     		Toast toast= Toast.makeText(getApplicationContext(), 
     				"Update fait !", Toast.LENGTH_SHORT);  
-    				toast.setGravity(Gravity.TOP|Gravity.CENTER_HORIZONTAL, 0, 0);
-    				toast.show();}
+    				toast.setGravity(Gravity.TOP|Gravity.CENTER_HORIZONTAL, 0, 80);
+    				toast.setDuration(4000);
+    				toast.show();
+    		for(int i=0; i<Traitement.Commandes.size(); i++){Commandes_Layout(Traitement.Commandes.get(i), i);}
+    		for(int i=m; i>Traitement.Commandes.size()+1000; i--){
+    			TextView valueTV=(TextView) findViewById(i);
+    			valueTV.setText("");}}
     	else{Toast toast= Toast.makeText(getApplicationContext(), 
 				"Echec de l'update. Vérifiez l'adresse enregistrée et l'état du Raspberry Pi.", Toast.LENGTH_SHORT);  
-				toast.setGravity(Gravity.TOP|Gravity.CENTER_HORIZONTAL, 0, 0);
-				toast.show();}**/
-    	
+				toast.setGravity(Gravity.TOP|Gravity.CENTER_HORIZONTAL, 0, 80);
+				toast.setDuration(4000);
+				toast.show();}	
+    		
     	ip_adress.setOnClickListener(new View.OnClickListener() {	
     		@Override
     		public void onClick(View v){
@@ -128,32 +161,17 @@ public class Yana extends Activity implements TextToSpeech.OnInitListener {
 			ArrayList<String> text = data.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);
 			Recrep= text.get(0);
 			
-			/** 
+			String Ordre="";
 			int n = Traitement.Comparaison(Recrep);
-			if(n<0){
-				
-				break;}
-			String Ordre = Traitement.Commandes.get(n);
-			String URL = Traitement.Liens.get(n);
+			if(n<0){Ordre=Recrep;}
+			else{Ordre = Traitement.Commandes.get(n);}
+			
+			/** String URL = Traitement.Liens.get(n);
 			**/
-			
-			String Ordre = Recrep;
-			conversation(Ordre, "envoi");
-			Rep="";
-			
-			android.os.SystemClock.sleep(1000);
-			Rep=Traitement.HTTP_Send(Ordre,IPadress.getText().toString());
-			
-			// Rep = Taitrement.HTTP_Contact(URL);
-			
-			conversation(Rep, "reponse");
-			
-			while(Rep==""){android.os.SystemClock.sleep(1000);}
-			
-			if(Box_TTS==true){
-				mTts = new TextToSpeech(this, this);}
-		    }
-			break;}
+
+			String URL="";
+			Prétraitement(Ordre, URL);
+			break;}}
 	
 			case OPTION: {getConfig();}
 	        }
@@ -183,12 +201,20 @@ public class Yana extends Activity implements TextToSpeech.OnInitListener {
 			if(Traitement.pick_JSON(IPadress.getText().toString())){
 	    		Toast toast= Toast.makeText(getApplicationContext(), 
 	    				"Update fait !", Toast.LENGTH_SHORT);  
-	    				toast.setGravity(Gravity.TOP|Gravity.CENTER_HORIZONTAL, 0, 0);
-	    				toast.show();}
+	    				toast.setGravity(Gravity.TOP|Gravity.CENTER_HORIZONTAL, 0, 80);
+	    				toast.setDuration(4000);
+	    				toast.show();
+	    		for(int i=0; i<Traitement.Commandes.size(); i++){Commandes_Layout(Traitement.Commandes.get(i), i);}
+	    		for(int i=m; i>Traitement.Commandes.size()+1000; i--){
+	    			TextView valueTV=(TextView) findViewById(i);
+	    			valueTV.setText("");}}
 	    	else{Toast toast= Toast.makeText(getApplicationContext(), 
 					"Echec de l'update. Vérifiez l'adresse enregistrée et l'état du Raspberry Pi.", Toast.LENGTH_SHORT);  
-					toast.setGravity(Gravity.TOP|Gravity.CENTER_HORIZONTAL, 0, 0);
-					toast.show();}}
+					toast.setGravity(Gravity.TOP|Gravity.CENTER_HORIZONTAL, 0, 80);
+    				toast.setDuration(4000);
+					toast.show();}
+		}
+		
 		return super.onOptionsItemSelected(item);}
 
     public void getConfig(){
@@ -290,4 +316,50 @@ public class Yana extends Activity implements TextToSpeech.OnInitListener {
         ((ScrollView) findViewById(R.id.conversation_scroll)).post(new Runnable(){
             public void run(){((ScrollView) findViewById(R.id.conversation_scroll)).fullScroll(View.FOCUS_DOWN);}}); // Pour ancrer en bas à chaque nouvel ordre
     	}
+    
+    public void Commandes_Layout(String Commande, int i){
+    	
+    	final View Conversation_layout =  findViewById(R.id.commandes_layout);
+    	
+    	if(1000+i<=m){
+    		TextView valueTV=(TextView) findViewById(1000+i);
+    		valueTV.setText(Commande);}
+    	else{
+	        TextView valueTV = new TextView(this);
+	        valueTV.setText(Commande);
+	        valueTV.setId(1000+i);
+	        
+	        RelativeLayout.LayoutParams params = new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.WRAP_CONTENT, RelativeLayout.LayoutParams.WRAP_CONTENT);
+	        	
+	        params.addRule(RelativeLayout.ALIGN_PARENT_LEFT);
+	        params.addRule(RelativeLayout.BELOW, (999+i));
+	
+	        valueTV.setPadding(10, 10, 10, 10);
+	        params.setMargins(20, 0, 20, 20);
+	        
+	        valueTV.setLayoutParams(params);
+	        ((ViewGroup) Conversation_layout).addView(valueTV);
+	        
+	    	valueTV.setOnClickListener(new View.OnClickListener() {
+	    		public void onClick(View v){
+	        		Prétraitement(Traitement.Commandes.get(v.getId()-1000), ""/**Traitement.Liens.get(v.getId()-1000)**/);}});
+	    	m=m+1;}}
+    
+    void Prétraitement(String Ordre, String URL){
+    	conversation(Ordre, "envoi");
+    	Rep="";
+    	if(Ordre.compareTo(Recrep)==0){Rep="Aucun ordre ne semble être identifié au votre.";}
+    	else{
+    		android.os.SystemClock.sleep(1000);
+			Rep=Traitement.HTTP_Send(Ordre,IPadress.getText().toString());}
+		
+		// Rep = Traitrement.HTTP_Contact(URL);
+		
+		conversation(Rep, "reponse");
+		
+		while(Rep==""){android.os.SystemClock.sleep(1000);}
+		
+		if(Box_TTS==true){mTts = new TextToSpeech(this, this);}
+	}
+    
 }

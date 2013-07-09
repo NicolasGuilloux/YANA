@@ -2,4 +2,6 @@
 <resources>
     <color name="envoi">#DEF1FA</color>
     <color name="recu">#BDDFEF</color>
+    <color name="theme">#A3D6F8</color>
+    <color name="theme_icon">#ED870E</color> 
 </resources>

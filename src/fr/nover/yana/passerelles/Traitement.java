@@ -35,6 +35,8 @@ public class Traitement {
  	
  	public static ArrayList<String> Commandes = new ArrayList<String>();
  	public static ArrayList<String> Liens = new ArrayList<String>();
+ 	public static ArrayList<String> Confidences = new ArrayList<String>();
+ 	
  	static boolean retour;
 	
 	public static String HTTP_Send(String Enregistrement, String IPadress){
@@ -63,27 +65,37 @@ public class Traitement {
 	
 	public static boolean pick_JSON(String IPadress){
 		retour=true;
-		JsonParser jParser = new JsonParser ();
-		JSONObject json = jParser.getJSONFromUrl(IPadress);
-		try{
+		
+		ArrayList<String> Commande = new ArrayList<String>();
+	 	ArrayList<String> Lien = new ArrayList<String>();
+	 	ArrayList<String> Confidence = new ArrayList<String>();
+	 	
+		try{JsonParser jParser = new JsonParser ();
+			JSONObject json = jParser.getJSONFromUrl("http://"+IPadress);
 			JSONArray commands = json.getJSONArray("commands");
 			for (int i = 0; i < commands.length(); i++) {
 				JSONObject emp = commands.getJSONObject(i);
-				Commandes.add(i, emp.getString("cmmand"));
-				Liens.add(i, emp.getString("url"));}
-		}
+				Commande.add(i, emp.getString("command"));
+				Lien.add(i, emp.getString("url"));
+				Confidence.add(i, emp.getString("confidence"));}
+			Commandes=Commande;
+			Liens=Lien;
+			Confidences=Confidence;}
 		catch(JSONException e){e.printStackTrace();retour=false;}
+		catch(Exception e){Log.e("log_tag", "Erreur pour le JSON : "+e.toString());}
 		return retour;}
 	
 	public static int Comparaison(String Enregistrement){
 		int n=-1;
 		double c=0,co;
-		for (int i = 0; i < Commandes.size(); i++){
-			co=LevenshteinDistance.similarity(Enregistrement, Commandes.get(i));
+		try{
+			for (int i = 0; i < Commandes.size(); i++){
+			co=LevenshteinDistance.similarity(Enregistrement, Commandes.get(i))-Double.parseDouble(Confidences.get(i));
 			if(co>c){
 				c=co;
 				n=i;}
-		}
+		}}
+		catch(Exception e){Log.e("log_tag", "Erreur pour la comparaison : "+e.toString());}
 		if(c<Voice_Sens){n=-1;}
 		return n;
 	}
@@ -106,5 +118,4 @@ public class Traitement {
             Reponse="Il y a eu une erreur lors du contact avec le Raspberry Pi.";}
 
     	return Reponse;}
-
 }

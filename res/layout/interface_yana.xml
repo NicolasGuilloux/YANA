@@ -1,70 +1,110 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/layout_interface"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:paddingBottom="@dimen/activity_vertical_margin"
-    android:paddingLeft="@dimen/activity_horizontal_margin"
-    android:paddingRight="@dimen/activity_horizontal_margin"
-    android:paddingTop="@dimen/activity_vertical_margin"
-    android:orientation="vertical"
-    android:descendantFocusability="beforeDescendants"
+	android:paddingLeft="@dimen/activity_horizontal_margin"
+	android:paddingRight="@dimen/activity_horizontal_margin"
+	android:paddingTop="@dimen/activity_vertical_margin"
+	android:descendantFocusability="beforeDescendants"
 	android:focusableInTouchMode="true"
-    tools:context=".Yana" >    
-
-    <ImageView
-        android:id="@+id/ip_adress"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentTop="true"
-        android:src="@drawable/ip_adress"
-        android:contentDescription="@string/IPadress" />
+    android:orientation="vertical"
+    tools:context=".YANA" >
     
-    <EditText
-        android:id="@+id/IPadress"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignBottom="@+id/ip_adress"
-        android:layout_alignTop="@+id/ip_adress"
-        android:layout_toRightOf="@+id/ip_adress"
-        android:inputType="text"
-        android:text="@string/IPadress" />
-    
-    <ScrollView
-	    android:layout_width="fill_parent"
-	    android:layout_height="wrap_content"
-	    android:layout_marginTop="10dp"
-        android:layout_above="@+id/tts_pref_false"
-        android:layout_alignLeft="@+id/btnRec"
-        android:layout_alignRight="@+id/btnRec"
-        android:layout_below="@+id/ip_adress"
-        android:id="@+id/conversation_scroll" >
+	        <ImageView
+		        android:id="@+id/ip_adress"
+		        android:layout_width="wrap_content"
+		        android:layout_height="wrap_content"
+		        android:layout_alignParentLeft="true"
+		        android:layout_alignParentTop="true"
+		        android:src="@drawable/ip_adress"
+		        android:contentDescription="@string/IPadress" />
+		    
+		    <EditText
+		        android:id="@+id/IPadress"
+		        android:layout_width="wrap_content"
+		        android:layout_height="wrap_content"
+		        android:layout_alignBottom="@+id/ip_adress"
+		        android:layout_alignTop="@+id/ip_adress"
+		        android:layout_toRightOf="@+id/ip_adress"
+		        android:inputType="text"
+		        android:text="@string/IPadress" />
+		    
+		    <ScrollView
+			    android:layout_width="fill_parent"
+			    android:layout_height="wrap_content"
+			    android:layout_marginTop="10dp"
+		        android:layout_above="@+id/tts_pref_false"
+		        android:layout_alignLeft="@+id/btnRec"
+		        android:layout_alignRight="@+id/btnRec"
+		        android:layout_below="@+id/ip_adress"
+		        android:id="@+id/conversation_scroll" >
+		
+			    <RelativeLayout
+			        android:layout_width="fill_parent"
+		        	android:layout_height="fill_parent"
+		        	android:id="@+id/conversation" >
+			        
+			    </RelativeLayout>
+			</ScrollView>
+		
+		    <TextView
+		        android:id="@+id/tts_pref_false"
+		        android:layout_width="wrap_content"
+		        android:layout_height="wrap_content"
+		        android:layout_above="@+id/btnRec"
+		        android:layout_centerHorizontal="true"
+		        android:textIsSelectable="true" />
 
-	    <RelativeLayout
-	        android:layout_width="fill_parent"
-        	android:layout_height="fill_parent"
-        	android:id="@+id/conversation" >
-	        
-	    </RelativeLayout>
-	</ScrollView>
-
-    <ImageButton
-        android:id="@+id/btnRec"
-        android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
-        android:layout_alignParentBottom="true"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentRight="true"
-        android:layout_margin="10dp"
-        android:contentDescription="@string/Recinfo"
-        android:src="@android:drawable/ic_btn_speak_now" />
-
-    <TextView
-        android:id="@+id/tts_pref_false"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_above="@+id/btnRec"
-        android:layout_centerHorizontal="true"
-        android:textIsSelectable="true" />
-
-</RelativeLayout>
+		    <ImageButton
+		        android:id="@+id/btnRec"
+		        android:layout_width="fill_parent"
+		        android:layout_height="wrap_content"
+		        android:layout_alignBottom="@+id/drawer"
+				android:paddingLeft="@dimen/activity_horizontal_margin"
+				android:paddingRight="@dimen/activity_horizontal_margin"		        
+				android:layout_marginBottom="45dip"
+		        android:contentDescription="@string/Recinfo"
+		        android:src="@android:drawable/ic_btn_speak_now" />
+		    
+		    <SlidingDrawer
+		        android:id="@+id/drawer"
+		        android:layout_width="fill_parent"
+		        android:layout_height="fill_parent"
+		        android:content="@+id/scroll_commandes"
+		        android:handle="@+id/handle"
+		        android:orientation="vertical" >
+		        
+		        <RelativeLayout 
+				    android:id="@+id/handle"
+		            android:layout_width="fill_parent"
+			        android:layout_height="40dip"
+			        android:background="@color/theme"
+			        android:radius="4dp"
+			        android:gravity="center" >
+			        
+			        <TextView
+			            android:gravity="center"
+				        android:layout_width="fill_parent"
+			            android:layout_height="fill_parent"
+				        android:textIsSelectable="false"
+				   		android:background="@drawable/linearborder"
+				        android:text="@string/commandes" />
+			    </RelativeLayout>
+		
+			    <ScrollView
+			        android:layout_width="fill_parent"
+			    	android:layout_height="wrap_content"
+			    	android:id="@+id/scroll_commandes" >
+		        	
+		        	<RelativeLayout
+			            android:id="@+id/commandes_layout"
+			            android:layout_width="fill_parent"
+			            android:layout_height="fill_parent"
+			            android:background="#fff" />
+		        	
+		        </ScrollView>
+		        
+		    </SlidingDrawer>
+		    
+		</RelativeLayout>
