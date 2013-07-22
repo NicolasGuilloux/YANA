@@ -15,6 +15,7 @@ public class Configuration extends PreferenceActivity {
 	@SuppressWarnings("deprecation")
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		addPreferencesFromResource(R.xml.option_configuration);}
+		addPreferencesFromResource(R.xml.option_configuration);
+	}
 
 }

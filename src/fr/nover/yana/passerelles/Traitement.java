@@ -8,18 +8,8 @@
 package fr.nover.yana.passerelles;
 
 import java.util.ArrayList;
-import java.util.List;
+import java.util.StringTokenizer;
 
-import org.apache.http.HttpEntity;
-import org.apache.http.HttpResponse;
-import org.apache.http.NameValuePair;
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.entity.UrlEncodedFormEntity;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.impl.client.DefaultHttpClient;
-import org.apache.http.message.BasicNameValuePair;
-import org.apache.http.protocol.HTTP;
-import org.apache.http.util.EntityUtils;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -28,94 +18,126 @@ import android.util.Log;
 
 public class Traitement {
 	
-	static String Reponse="";
-	// Logger tag
- 	private static final String TAG="";
- 	public static double Voice_Sens;
+	static String Reponse=""; // Déclare la variable de réponse
+	
+ 	private static final String TAG=""; // Logger tag
+ 	public static double Voice_Sens; // Sensibilité de la comparaison entre ordres et commandes
+ 	static public String URL="";
  	
+ 		// Déclare les ArraList utilisées pour stocker les éléments de commandes
  	public static ArrayList<String> Commandes = new ArrayList<String>();
  	public static ArrayList<String> Liens = new ArrayList<String>();
  	public static ArrayList<String> Confidences = new ArrayList<String>();
  	
- 	static boolean retour;
+ 	static boolean retour; // Déclare le retour pour la passerelles JsonParser
+ 	
+ 	static JSONObject json;
 	
-	public static String HTTP_Send(String Enregistrement, String IPadress){
-		Log.d(TAG,"Echange avec le serveur");
-		
-			// Début de l'envoie au serveur
-		HttpClient httpclient = new DefaultHttpClient();
-	    HttpPost httppost = new HttpPost("http://"+IPadress);
-
-	    try {
-	        	// Prépare les variables et les envoient
-	        List<NameValuePair> nameValuePairs = new ArrayList<NameValuePair>(2);
-	        nameValuePairs.add(new BasicNameValuePair("message", Enregistrement.toString()));
-	        httppost.setEntity(new UrlEncodedFormEntity(nameValuePairs, HTTP.UTF_8));
-
-	        	// Reçoit la réponse
-	        HttpResponse responsePOST = httpclient.execute(httppost);
-	        HttpEntity httpreponse = responsePOST.getEntity();
-	        Reponse = EntityUtils.toString(httpreponse).trim();}
-        
-        catch(Exception e){
-            Log.e("log_tag", "Error converting result "+e.toString());
-            Reponse="Il y a eu une erreur lors du contact avec le Raspberry Pi.";}
-
-    	return Reponse;}
-	
-	public static boolean pick_JSON(String IPadress){
-		retour=true;
-		
-		ArrayList<String> Commande = new ArrayList<String>();
-	 	ArrayList<String> Lien = new ArrayList<String>();
-	 	ArrayList<String> Confidence = new ArrayList<String>();
-	 	
-		try{JsonParser jParser = new JsonParser ();
-			JSONObject json = jParser.getJSONFromUrl("http://"+IPadress);
-			JSONArray commands = json.getJSONArray("commands");
-			for (int i = 0; i < commands.length(); i++) {
-				JSONObject emp = commands.getJSONObject(i);
-				Commande.add(i, emp.getString("command"));
-				Lien.add(i, emp.getString("url"));
-				Confidence.add(i, emp.getString("confidence"));}
-			Commandes=Commande;
-			Liens=Lien;
-			Confidences=Confidence;}
-		catch(JSONException e){e.printStackTrace();retour=false;}
-		catch(Exception e){Log.e("log_tag", "Erreur pour le JSON : "+e.toString());}
-		return retour;}
-	
-	public static int Comparaison(String Enregistrement){
+	public static int Comparaison(String Enregistrement){ // Processus de comparaison pour faire une reconnaissance par pertinence
 		int n=-1;
 		double c=0,co;
 		try{
 			for (int i = 0; i < Commandes.size(); i++){
-			co=LevenshteinDistance.similarity(Enregistrement, Commandes.get(i))-Double.parseDouble(Confidences.get(i));
-			if(co>c){
+			co=LevenshteinDistance.similarity(Enregistrement, Commandes.get(i));
+			if(co>c && co>Double.parseDouble(Confidences.get(i))-Voice_Sens){
 				c=co;
 				n=i;}
 		}}
 		catch(Exception e){Log.e("log_tag", "Erreur pour la comparaison : "+e.toString());}
-		if(c<Voice_Sens){n=-1;}
-		return n;
-	}
+		if(c<Voice_Sens){n=-1;} // Compare en fonction de la sensibilité (cf option)
+		return n;} // Retourne le résultat
 	
 	public static String HTTP_Contact(String URL){
 		Log.d(TAG,"Echange avec le serveur");
 		
-			// Début de l'envoie au serveur
-		HttpClient httpclient = new DefaultHttpClient();
-	    HttpPost httppost = new HttpPost(URL);
 
-	    try {
-	        	// Reçoit la réponse
-	        HttpResponse responsePOST = httpclient.execute(httppost);
-	        HttpEntity httpreponse = responsePOST.getEntity();
-	        Reponse = EntityUtils.toString(httpreponse).trim();}
-        
-        catch(Exception e){
-            Log.e("log_tag", "Error converting result "+e.toString());
-            Reponse="Il y a eu une erreur lors du contact avec le Raspberry Pi.";}
-
+		Log.d(TAG,URL);
+	    
+	    	JsonParser jParser = new JsonParser ();
+	    	JSONObject json = jParser.getJSONFromUrl(URL);
+	    try{JSONArray commands = json.getJSONArray("responses");
+			JSONObject Rep = commands.getJSONObject(0); // Importe la première valeur
+			Reponse=Rep.getString("sentence");
+			for (int i = 1; i < commands.length(); i++) { // Importe les autres valeurs s'il y en a
+				JSONObject emp = commands.getJSONObject(i);
+				if("talk".compareTo(emp.getString("type"))==0){
+					Reponse=Reponse+" \n"+emp.getString("sentence");}}}
+		catch(JSONException e){e.printStackTrace();}
+		catch(Exception e){
+			try{
+				JSONArray commands = json.getJSONArray("error");
+				JSONObject Rep = commands.getJSONObject(0); // Importe la première valeur
+				Reponse=Rep.getString("error");}
+			catch(JSONException x){e.printStackTrace();}
+			catch(Exception x){
+				Reponse="Il y a eu une erreur lors du contact avec le Raspberry Pi.";}
+			}
+	    	
     	return Reponse;}
+	
+	public static boolean pick_JSON(String IPadress, String Token){
+		retour=true;
+
+		Commandes.clear();
+		Liens.clear();
+		Confidences.clear();
+
+	 	JsonParser jParser = new JsonParser ();
+	 	try{json = jParser.getJSONFromUrl("http://"+IPadress+"?action=GET_SPEECH_COMMAND&token="+Token);}
+	 	catch(Exception e){}
+	 	
+	 	if(retour){
+	 		Log.d("","Début du traitement du JSON");
+		 	try{JSONArray commands = json.getJSONArray("commands");
+				for(int i = 0; i < commands.length(); i++) {
+					JSONObject emp = commands.getJSONObject(i);
+					String Command=emp.getString("command");
+					String URL = emp.getString("url");
+					StringTokenizer tokens = new StringTokenizer(URL, "?");
+					tokens.nextToken();
+					URL = tokens.nextToken();
+					if(!URL.contains("sound")){
+						Commandes.add(Command);
+						Liens.add(URL);
+						Confidences.add(emp.getString("confidence"));}
+					}
+			}
+		
+		 	catch(JSONException e){
+				Verification_erreur();
+				retour=false;}
+		 	
+			catch(Exception e){
+				Verification_erreur();
+				retour=false;}}
+	 	else{
+	 		Liens.add(1, "");
+			Confidences.add(1, "");
+	 		Commandes.add(1, "Echec du contact avec le serveur. Veuillez vérifier votre système et l'adresse entrée.");}
+	 	
+		Commandes.add(0, "YANA, cache-toi.");
+		Liens.add(0, "");
+		Confidences.add(0, "0.7");
+		
+		return retour;}
+	
+	static void Verification_erreur(){
+		Log.d(TAG, "Regarde s'il n'y a pas une erreur disponible.");
+		
+		Liens.add("");
+		Confidences.add("");
+				
+		try{
+			if(json.getString("error").compareTo("insufficient permissions")==0 || json==null){
+				Commandes.add("Il y a une erreur d'identification ou vous n'avez pas les permissions nécéssaires. Vérifiez votre Token.");}
+		}
+		catch(JSONException x){
+			Log.d(TAG, "Echec de toute compréhension.");
+			Commandes.add("Echec de compréhension par rapport à la réponse du Raspberry Pi. Veuillez présenter le problème à Nover.");}
+
+		catch(Exception x){
+			Log.d(TAG, "Echec de toute compréhension.");
+			Commandes.add("Echec de compréhension par rapport à la réponse du Raspberry Pi. Veuillez présenter le problème à Nover.");}
+	}
+
 }

@@ -22,20 +22,30 @@ public class JsonParser {
 	// Constructeur de notre classe
 	public JsonParser() {}
 	
-	public JSONObject getJSONFromUrl(String IPadress) {
+	public JSONObject getJSONFromUrl(String URL) {
 	
 	// début de la requête http
 		try {
+			jObj=null;
 		// faire appel à defaultHttpClient
 			DefaultHttpClient httpClient = new DefaultHttpClient();
-			HttpPost httpPost = new HttpPost("http://"+IPadress);
+			HttpPost httpPost = new HttpPost(URL);
 			HttpResponse httpResponse = httpClient.execute(httpPost);
 			HttpEntity httpEntity = httpResponse.getEntity();
 			json = EntityUtils.toString(httpEntity).trim();;} 
 		
-		catch (UnsupportedEncodingException e) {e.printStackTrace();Traitement.retour=false;} 
-		catch (ClientProtocolException e) {e.printStackTrace();Traitement.retour=false;} 
-		catch (IOException e) {e.printStackTrace();Traitement.retour=false;}
+		catch (UnsupportedEncodingException e) {
+			Log.d("","UnsupportedEncoding");
+			e.printStackTrace();Traitement.retour=false;} 
+		catch (ClientProtocolException e) {
+			Log.d("","Client");
+			e.printStackTrace();Traitement.retour=false;} 
+		catch (IOException e) {
+			Log.d("","IOException");
+			e.printStackTrace();Traitement.retour=false;}
+		catch (Exception e) {
+			Log.d("","IOException");
+			e.printStackTrace();Traitement.retour=false;}
 	
 		// convertir le résultat qui est sous format d'un String en un JSONObject
 		try {jObj = new JSONObject(json);} 

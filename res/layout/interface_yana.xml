@@ -27,7 +27,7 @@
 		        android:layout_alignBottom="@+id/ip_adress"
 		        android:layout_alignTop="@+id/ip_adress"
 		        android:layout_toRightOf="@+id/ip_adress"
-		        android:inputType="text"
+		    	android:inputType="textWebEditText"
 		        android:text="@string/IPadress" />
 		    
 		    <ScrollView
@@ -42,7 +42,7 @@
 		
 			    <RelativeLayout
 			        android:layout_width="fill_parent"
-		        	android:layout_height="fill_parent"
+		        	android:layout_height="wrap_content"
 		        	android:id="@+id/conversation" >
 			        
 			    </RelativeLayout>
@@ -94,13 +94,13 @@
 		
 			    <ScrollView
 			        android:layout_width="fill_parent"
-			    	android:layout_height="wrap_content"
+			    	android:layout_height="fill_parent"
 			    	android:id="@+id/scroll_commandes" >
 		        	
 		        	<RelativeLayout
 			            android:id="@+id/commandes_layout"
 			            android:layout_width="fill_parent"
-			            android:layout_height="fill_parent"
+			            android:layout_height="wrap_content"
 			            android:background="#fff" />
 		        	
 		        </ScrollView>

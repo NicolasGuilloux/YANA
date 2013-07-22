@@ -1,20 +1,33 @@
 <?xml version="1.0" encoding="utf-8"?>
 
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
-	<PreferenceCategory android:title="Configurez Yuri">
+	<PreferenceCategory android:title="Configurez Yana">
+	    <EditTextPreference
+			android:key="token"
+			android:title="Token permettant de vous identifier"
+		    android:inputType="textNoSuggestions"
+			android:summary="Entrez votre Token (ils se trouvent sur la page d'accueil de l'interface Web)">
+		</EditTextPreference>
 		<EditTextPreference
 			android:key="IPadress"
+			android:id="@+id/ipadress_conf"
 			android:title="Adresse de la page"
 			android:defaultValue="@string/IPadress"
+		    android:inputType="textWebEditText"
 			android:summary="Entrez l'adresse de votre page (sans http://)">
 		</EditTextPreference>
 		<EditTextPreference
 			android:key="Voice_sens"
-			android:title="Sensibilité de l'ordre"
-			android:defaultValue="7.0"
-			android:inputType="numberDecimal" 
-			android:summary="Augmentez pour le rendre plus sensible">
+			android:title="Sensibilité de l'ordre (moins de 90)"
+			android:defaultValue="10"
+			android:inputType="number"
+			android:summary="Augmentez pour le rendre moins sensible">
 		</EditTextPreference>
+		<CheckBoxPreference
+		    android:key="update"
+		    android:title="Activer l'update des commandes au démarrage"
+		    android:summary="Cochez pour activer l'update des commandes au démarrage de l'application"
+		    android:defaultValue="False" />
 		<CheckBoxPreference
 		    android:key="tts_pref"
 		    android:title="Activer TTS"
@@ -27,7 +40,7 @@
 		    android:defaultValue="True" />
 		<EditTextPreference
 			android:key="shake_sens"
-			android:title="Sensibilité du Shake"
+			android:title="Sensibilité du Shake (entre 1 et 5)"
 			android:defaultValue="3.0"
 			android:inputType="numberDecimal" 
 			android:summary="Augmentez pour le rendre moins sensible">
