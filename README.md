@@ -1,4 +1,4 @@
-YANA
+YANA for Android
 ====
 
 Nouveau projet en relation avec la nouvelle installation d'Idleman. 
@@ -15,7 +15,7 @@ L'adresse du site d'Idleman est : http://blog.idleman.fr/?page_id=2166
 
 Adresse destinée à  Yana : http://projet.idleman.fr/yana/
 
-YANA for Android
+Installation
 ====
 
 1. Téléchargez l'apk sur la page de téléchargement.
