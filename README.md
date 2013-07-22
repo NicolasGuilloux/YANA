@@ -10,4 +10,25 @@ Celle application servira à interagir avec votre maison via le Rapsberry Pi (o�
 ![Presentation](https://raw.github.com/Etsuni/YANA/master/presentation.png)
 
 L'adresse du GitHub de Idleman est : https://github.com/ldleman
+
 L'adresse du site d'Idleman est : http://blog.idleman.fr/?page_id=2166
+
+Adresse destinée à  Yana : http://projet.idleman.fr/yana/
+
+YANA for Android
+====
+
+1. Téléchargez l'apk sur la page de téléchargement.
+2. Si vous l'avez téléchargé sur votre ordinateur, enregistrez le sur votre Android.
+3. Vérifiez que votre Android accepte les sources inconnues (Allez dans Application ou, suivant la version, Sécurité).
+4. Avec un explorateur de fichier, lancez le "Yana.apk" et installez le.
+
+Il existe une autre façon de le faire :
+
+1. Installez Airdroid via Google Play.
+2. Démarrez l'application. Il vous propose un lien que vous entrerez dans le navigateur de votre ordinateur.
+3. Suivez les instructions.
+4. Cliquez sur "Apps" sur l'ordinateur, puis installez l'application en cliquant sur le bouton correspondant, et sélectionnez l'apk.
+5. Enfin, suivez les instructions sur le portable pour l'installer. 
+
+####N'oubliez pas de configurer votre application afin de l'adapter à votre installation.
