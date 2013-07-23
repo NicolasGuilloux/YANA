@@ -14,6 +14,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import android.annotation.SuppressLint;
 import android.util.Log;
 
 public class Traitement {
@@ -75,6 +76,7 @@ public class Traitement {
 	    	
     	return Reponse;}
 	
+	@SuppressLint("DefaultLocale")
 	public static boolean pick_JSON(String IPadress, String Token){
 		retour=true;
 
@@ -92,6 +94,8 @@ public class Traitement {
 				for(int i = 0; i < commands.length(); i++) {
 					JSONObject emp = commands.getJSONObject(i);
 					String Command=emp.getString("command");
+					if(Command.contains("&#039;")){
+						Command = Command.replace("&#039;", "'");}
 					String URL = emp.getString("url");
 					StringTokenizer tokens = new StringTokenizer(URL, "?");
 					tokens.nextToken();

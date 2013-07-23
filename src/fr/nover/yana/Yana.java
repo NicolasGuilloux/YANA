@@ -10,12 +10,15 @@ package fr.nover.yana;
 import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.content.ActivityNotFoundException;
 import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
@@ -40,6 +43,10 @@ import android.widget.Toast;
 
 import java.util.ArrayList;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import fr.nover.yana.passerelles.JsonParser;
 import fr.nover.yana.passerelles.Traitement;
 import fr.nover.yana.passerelles.ShakeDetector;
 
@@ -55,13 +62,14 @@ public class Yana extends Activity implements TextToSpeech.OnInitListener{
 		
     private TextToSpeech mTts;// Déclare le TTS
     
-    static boolean testTTS = false;
+    static boolean testTTS = false, testMAJ = false;
 	    
     	// A propos du Service (Intent pour le lancer et servstate pour savoir l'état du service)
 	private Intent ShakeService;
 	static boolean servstate=false;
 	boolean Box_TTS;
-	String Token="";
+	
+	String Token="",Version="1.0.1";
 	
 		// Conversation et liste de commandes
 	int n=1;
@@ -114,7 +122,16 @@ public class Yana extends Activity implements TextToSpeech.OnInitListener{
     	ip_adress.setOnClickListener(new View.OnClickListener() { // Lance la configuration si on clique sur l'image à côté de l'adresse IP
     		@Override
     		public void onClick(View v){
-    			startActivityForResult(new Intent(Yana.this, Configuration.class), OPTION);}});
+    			String IP_Adress=IPadress.getText().toString();
+    			if(IP_Adress.contains("action.php")){
+    				IP_Adress = IP_Adress.replace("action.php", "");
+        			Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse("http://"+IP_Adress));
+        			startActivity(browserIntent);}
+    			else{
+    				Toast toast= Toast.makeText(getApplicationContext(),
+    			    "Votre adresse n'est pas bonne. :(", 4000);  
+    				toast.show();}
+    			}});
     	
     	btnRec.setOnClickListener(new View.OnClickListener() {	 // S'effectue lors d'un appui sur le bouton Rec
     		@Override
@@ -123,10 +140,39 @@ public class Yana extends Activity implements TextToSpeech.OnInitListener{
 	
 	public void onStart(){
 	    super.onStart();
-		// Vérifie la présence du TTS. S'il n'y en a pas, il propose une installation
+			// Vérifie la présence du TTS. S'il n'y en a pas, il propose une installation
     	Intent checkIntent = new Intent();
 	    checkIntent.setAction(TextToSpeech.Engine.ACTION_CHECK_TTS_DATA);
 	    startActivityForResult(checkIntent, TTS);
+	    
+	    if(!testMAJ){	// Vérifie la version d'Android
+		    JsonParser jParser = new JsonParser ();
+		    JSONObject json=null;
+		 	try{json = jParser.getJSONFromUrl("https://raw.github.com/Etsuni/YANA/master/maj.json");}
+		 	catch(Exception e){}
+		 	
+		 	try{
+		 		String Version_dispo=json.getString("version");
+			 	if(Version_dispo.compareTo(Version)!=0){
+			 		new AlertDialog.Builder(this)
+			 	    .setTitle("Une nouvelle version est disponible.")
+			 	    .setMessage("La version de votre application est "+Version+" alors que la version "+Version_dispo+" est disponible. Voulez vous faire la mise à jour maintenant ?")
+			 	    .setPositiveButton("Oui", new DialogInterface.OnClickListener() {
+			 	        public void onClick(DialogInterface dialog, int which) { 
+			 	        	Intent MAJ = new Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/Etsuni/YANA/raw/master/YANA.apk"));
+		        			startActivity(MAJ);
+			 	        }
+			 	     })
+			 	    .setNegativeButton("Non", new DialogInterface.OnClickListener() {
+			 	        public void onClick(DialogInterface dialog, int which) { 
+			 	            // do nothing
+			 	        }
+			 	     })
+			 	     .show();
+			 		testMAJ=true;
+			 	}}
+		 	catch(JSONException e){}
+		 	catch(Exception e){}}	
 	}
 	
 	public void onActivityResult(int requestCode, int resultCode, Intent data) // S'exécute lors d'un retour d'activité
