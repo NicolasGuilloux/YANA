@@ -18,6 +18,10 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
+import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager.NameNotFoundException;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -28,6 +32,7 @@ import android.speech.RecognizerIntent;
 import android.speech.tts.TextToSpeech;
 import android.support.v4.content.LocalBroadcastManager;
 import android.text.InputType;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -67,9 +72,9 @@ public class Yana extends Activity implements TextToSpeech.OnInitListener{
     	// A propos du Service (Intent pour le lancer et servstate pour savoir l'état du service)
 	private Intent ShakeService;
 	static boolean servstate=false;
-	boolean Box_TTS;
+	boolean Box_TTS, Box_MAJ, Box_TTS_presence;
 	
-	String Token="",Version="1.0.1";
+	String Token="",Version;
 	
 		// Conversation et liste de commandes
 	int n=1;
@@ -145,34 +150,49 @@ public class Yana extends Activity implements TextToSpeech.OnInitListener{
 	    checkIntent.setAction(TextToSpeech.Engine.ACTION_CHECK_TTS_DATA);
 	    startActivityForResult(checkIntent, TTS);
 	    
-	    if(!testMAJ){	// Vérifie la version d'Android
+	    PackageInfo pInfo;
+		try {
+			pInfo = getPackageManager().getPackageInfo(getPackageName(), 0);
+		    Version = pInfo.versionName;
+		    Log.d("","La version de l'application est "+Version);
+		} catch (NameNotFoundException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
+	    
+	    if(!testMAJ && Box_MAJ){	// Vérifie la version d'Android
 		    JsonParser jParser = new JsonParser ();
-		    JSONObject json=null;
-		 	try{json = jParser.getJSONFromUrl("https://raw.github.com/Etsuni/YANA/master/maj.json");}
-		 	catch(Exception e){}
-		 	
 		 	try{
-		 		String Version_dispo=json.getString("version");
+		 		JSONObject json = jParser.getJSONFromUrl("http://192.168.1.84:81/maj.json");
+		 		String Version_dispo = json.getString("version");
 			 	if(Version_dispo.compareTo(Version)!=0){
+			 	    
 			 		new AlertDialog.Builder(this)
 			 	    .setTitle("Une nouvelle version est disponible.")
 			 	    .setMessage("La version de votre application est "+Version+" alors que la version "+Version_dispo+" est disponible. Voulez vous faire la mise à jour maintenant ?")
-			 	    .setPositiveButton("Oui", new DialogInterface.OnClickListener() {
-			 	        public void onClick(DialogInterface dialog, int which) { 
-			 	        	Intent MAJ = new Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/Etsuni/YANA/raw/master/YANA.apk"));
-		        			startActivity(MAJ);
-			 	        }
-			 	     })
 			 	    .setNegativeButton("Non", new DialogInterface.OnClickListener() {
 			 	        public void onClick(DialogInterface dialog, int which) { 
 			 	            // do nothing
 			 	        }
 			 	     })
+			 	    .setPositiveButton("Oui", new DialogInterface.OnClickListener() {
+			 	        public void onClick(DialogInterface dialog, int which) { 
+			 	        	Intent MAJ = new Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/Etsuni/YANA/raw/master/YANA.apk"));
+		        			startActivity(MAJ);}
+			 	     })
 			 	     .show();
 			 		testMAJ=true;
-			 	}}
-		 	catch(JSONException e){}
-		 	catch(Exception e){}}	
+			 }}
+		 	
+		 	catch(JSONException e){
+		 		 Toast toast= Toast.makeText(getApplicationContext(),
+		 	     "Echec de la vérification de mise à jour.", 4000);  
+		 		 toast.show();}
+		 	
+		 	catch(Exception e){
+		 		Toast toast= Toast.makeText(getApplicationContext(),
+				"Echec de la vérification de mise à jour.", 4000);  
+				toast.show();}}	
 	}
 	
 	public void onActivityResult(int requestCode, int resultCode, Intent data) // S'exécute lors d'un retour d'activité
@@ -196,14 +216,23 @@ public class Yana extends Activity implements TextToSpeech.OnInitListener{
 		
 		case OPTION: {getConfig();} // Dès un retour de la configuration, il la recharge
 		case TTS:{
-			if (resultCode != TextToSpeech.Engine.CHECK_VOICE_DATA_PASS && testTTS==false) {
-				Intent installIntent = new Intent();
-	            installIntent.setAction(TextToSpeech.Engine.ACTION_INSTALL_TTS_DATA);
-	            startActivity(installIntent);
-	            
-	            Toast toast= Toast.makeText(getApplicationContext(),
-	            "Android ne détecte aucun dispositif de Synthèse Vocale (TTS). Veuillez installer un programme de Synthèse Vocale sinon l'application ne sera pas entièrement fonctionnelle.", 4000);  
-				toast.show();}
+			if (resultCode != TextToSpeech.Engine.CHECK_VOICE_DATA_PASS && testTTS==false && Box_TTS_presence) {
+				new AlertDialog.Builder(this)
+		 	    .setTitle("Il n'y a pas un TTS utilisable")
+		 	    .setMessage("Android ne détecte aucun dispositif de Synthèse Vocale (TTS). Voulez vous installer un programme de Synthèse Vocale (sinon l'application ne sera pas entièrement fonctionnelle) ?")
+		 	    .setNegativeButton("Non", new DialogInterface.OnClickListener() {
+		 	        public void onClick(DialogInterface dialog, int which) { 
+		 	            testTTS=true;
+		 	        }
+		 	     })
+		 	    .setPositiveButton("Oui", new DialogInterface.OnClickListener() {
+		 	        public void onClick(DialogInterface dialog, int which) { 
+		 	        	Intent installIntent = new Intent();
+			            installIntent.setAction(TextToSpeech.Engine.ACTION_INSTALL_TTS_DATA);
+			            startActivity(installIntent);
+		 	        }
+		 	     })
+		 	    .show();}
 			else{testTTS=true;}}
 	}}
 
@@ -239,6 +268,9 @@ public class Yana extends Activity implements TextToSpeech.OnInitListener{
     		tts_pref_false.setText("Attention ! Votre TTS est désactivé.");}
     	else{
     		tts_pref_false.setText("");}
+    	
+    	Box_TTS_presence=preferences.getBoolean("TTS_presence", true);
+    	Box_MAJ=preferences.getBoolean("maj", true);
     	
     	update=preferences.getBoolean("update", false);
     	
@@ -361,18 +393,29 @@ public class Yana extends Activity implements TextToSpeech.OnInitListener{
 	    	m=m+1;}}
 
     void Commandes_actu(){ // Ici on va actualiser la liste des commandes
+    	ConnectivityManager cm = (ConnectivityManager) getApplicationContext()
+                .getSystemService(Context.CONNECTIVITY_SERVICE);
+ 
+        NetworkInfo activeNetwork = cm.getActiveNetworkInfo();
+    	
     	if(m>999 && Token.compareTo("")!=0){
-	    	if(Traitement.pick_JSON(IPadress.getText().toString(), Token)){ // Commence le protocole de reception et les enregistre dans une ArrayList
-	    		Toast toast= Toast.makeText(getApplicationContext(), 
-	    				"Update fait !", 4000);  
-	    				toast.setGravity(Gravity.TOP|Gravity.CENTER_HORIZONTAL, 0, 80);
-	    				toast.show();}
-	    	
-	    	else{
-	    		Toast toast= Toast.makeText(getApplicationContext(), // En cas d'échec, il prévient l'utilisateur
-	    		Traitement.Commandes.get(1), 4000);  
-				toast.setGravity(Gravity.TOP|Gravity.CENTER_HORIZONTAL, 0, 80);
-				toast.show();}
+    		if(activeNetwork!=null){
+		    	if(Traitement.pick_JSON(IPadress.getText().toString(), Token)){ // Commence le protocole de reception et les enregistre dans une ArrayList
+		    		Toast toast= Toast.makeText(getApplicationContext(), 
+		    				"Update fait !", 4000);  
+		    				toast.setGravity(Gravity.TOP|Gravity.CENTER_HORIZONTAL, 0, 80);
+		    				toast.show();}
+		    	
+		    	else{
+		    		Toast toast= Toast.makeText(getApplicationContext(), // En cas d'échec, il prévient l'utilisateur
+		    		Traitement.Commandes.get(1), 4000);  
+					toast.setGravity(Gravity.TOP|Gravity.CENTER_HORIZONTAL, 0, 80);
+					toast.show();}}
+		    else{
+		    	Toast toast= Toast.makeText(getApplicationContext(), // En cas d'échec, il prévient l'utilisateur
+			    	"Vous n'avez pas de connexion internet !", 4000);  
+					toast.setGravity(Gravity.TOP|Gravity.CENTER_HORIZONTAL, 0, 80);
+					toast.show();}
     	}
     	
     	else if (Token.compareTo("")==0){ 
@@ -440,7 +483,20 @@ public class Yana extends Activity implements TextToSpeech.OnInitListener{
     	}
     	
     	else if(Ordre.compareTo(Recrep)==0){Rep="Aucun ordre ne semble être identifié au votre.";} // Si Ordre=Recrep alors c'est que la reconnaissance par pertinence a échoué
-    	else{Rep = Traitement.HTTP_Contact("http://"+IPadress.getText().toString()+"?"+URL+"&token="+Token);} // Envoie au RPi et enregistre sa réponse
+    	else{
+    		ConnectivityManager cm = (ConnectivityManager) getApplicationContext()
+                    .getSystemService(Context.CONNECTIVITY_SERVICE);
+     
+            NetworkInfo activeNetwork = cm.getActiveNetworkInfo();
+        	
+        	if(activeNetwork!=null){ // Vérifie le réseau
+        		Rep = Traitement.HTTP_Contact("http://"+IPadress.getText().toString()+"?"+URL+"&token="+Token);} // Envoie au RPi et enregistre sa réponse
+        	else{
+        		Toast toast= Toast.makeText(getApplicationContext(), // En cas d'échec, il prévient l'utilisateur
+    			    	"Vous n'avez pas de connexion internet !", 4000);  
+    					toast.setGravity(Gravity.TOP|Gravity.CENTER_HORIZONTAL, 0, 80);
+    					toast.show();}
+        }
 		
 		conversation(Rep, "reponse");
 		

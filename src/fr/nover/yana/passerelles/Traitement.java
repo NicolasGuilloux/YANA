@@ -50,12 +50,11 @@ public class Traitement {
 	
 	public static String HTTP_Contact(String URL){
 		Log.d(TAG,"Echange avec le serveur");
-		
-
-		Log.d(TAG,URL);
 	    
 	    	JsonParser jParser = new JsonParser ();
-	    	JSONObject json = jParser.getJSONFromUrl(URL);
+	    try{json = jParser.getJSONFromUrl(URL);}
+	    catch(Exception e){}
+	    	
 	    try{JSONArray commands = json.getJSONArray("responses");
 			JSONObject Rep = commands.getJSONObject(0); // Importe la première valeur
 			Reponse=Rep.getString("sentence");

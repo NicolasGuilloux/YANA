@@ -17,6 +17,8 @@ import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.hardware.Sensor;
 import android.hardware.SensorManager;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.Build;
 import android.os.IBinder;
 import android.os.Looper;
@@ -28,6 +30,7 @@ import android.speech.RecognizerIntent;
 import android.speech.SpeechRecognizer;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
+import android.view.Gravity;
 import android.widget.Toast;
 
 import java.util.ArrayList;
@@ -40,7 +43,7 @@ import fr.nover.yana.passerelles.ScreenReceiver;
 import fr.nover.yana.passerelles.ShakeDetector;
 import fr.nover.yana.passerelles.ShakeDetector.OnShakeListener;
 
-@SuppressLint("NewApi")
+@SuppressLint({ "NewApi", "ShowToast" })
 public class ShakeService extends Service implements TextToSpeech.OnInitListener, RecognitionListener{
 
 	private ShakeDetector mShakeDetector; // Pour la détection du "shake"
@@ -101,7 +104,7 @@ public class ShakeService extends Service implements TextToSpeech.OnInitListener
         final BroadcastReceiver mReceiver = new ScreenReceiver();
         registerReceiver(mReceiver, filter);
         
-	fin();}
+        fin();}
 
     public void onDestroy() { // En cas d'arrêt du service
         super.onDestroy();
@@ -148,11 +151,12 @@ public class ShakeService extends Service implements TextToSpeech.OnInitListener
 
 	@TargetApi(Build.VERSION_CODES.FROYO)
 	@SuppressLint("NewApi")
-	public void startVoiceRecognitionCycle(){ // Démarre le cicle de reconnaissance vocale
+	public void startVoiceRecognitionCycle(){ // Démarre le cycle de reconnaissance vocale
 		last_init=true;
 		Intent intent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
 		intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL,RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
 		intent.putExtra(RecognizerIntent.EXTRA_CALLING_PACKAGE,"fr.nover.yana");
+        intent.putExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS, true);
 		getSpeechRevognizer().startListening(intent);}
 
 	public void stopVoiceRecognition(){ // Arrête le cicle de reconnaissance vocale
@@ -163,7 +167,8 @@ public class ShakeService extends Service implements TextToSpeech.OnInitListener
 		Log.d(TAG,"onReadyForSpeech");
 		// create and schedule the input speech timeout
 		speechTimeout = new Timer();
-		speechTimeout.schedule(new SilenceTimer(), 5000);}
+		speechTimeout.schedule(new SilenceTimer(), 5000);
+		}
 
 	public void onBeginningOfSpeech() { // Dès qu'on commence à parler
 		Log.d(TAG,"onBeginningOfSpeech");
@@ -176,7 +181,6 @@ public class ShakeService extends Service implements TextToSpeech.OnInitListener
 
 	public void onError(int error) { // Si erreur, il affiche celle correspondante
 		String message;
-		fin();
 		switch (error){
 			case SpeechRecognizer.ERROR_AUDIO:
 				message = "Erreur d'enregistrement audio";
@@ -194,7 +198,7 @@ public class ShakeService extends Service implements TextToSpeech.OnInitListener
 				message = "Erreur de réseau (trop long)";
 				break;
 			case SpeechRecognizer.ERROR_NO_MATCH:
-				message = "Pas de correspondance. Essayez de quitter l'application totalement ou de redémarrer le service.";
+				message = "Il y a eu une erreur en contactant la reconnaissance vocale. Essayez de quitter l'application totalement ou de redémarrer le service.";
 				break;
 			case SpeechRecognizer.ERROR_RECOGNIZER_BUSY:
 				message = "La reconnaissance vocale est déjà utilisée";
@@ -208,7 +212,8 @@ public class ShakeService extends Service implements TextToSpeech.OnInitListener
 			default:
 				message = "Erreur inconnue";
 				break;}
-		
+
+		fin();
 		Log.d(TAG,"onError code:" + error + " message: " + message);
 		Toast t = Toast.makeText(getApplicationContext(),
 				"Annulé : " + message.toString().toString(),
@@ -244,7 +249,19 @@ public class ShakeService extends Service implements TextToSpeech.OnInitListener
 	 	
 	 	if(n>0){ // Si l'ordre est valable
 	    	URL = Traitement.Liens.get(n);
-	    	A_dire = Traitement.HTTP_Contact("http://"+IPadress+"?"+URL+"&token="+Token);}
+	    	
+	    	ConnectivityManager cm = (ConnectivityManager) getApplicationContext()
+                    .getSystemService(Context.CONNECTIVITY_SERVICE);
+     
+            NetworkInfo activeNetwork = cm.getActiveNetworkInfo();
+            
+	    	if(activeNetwork!=null){ // Vérifie le réseau
+	    		A_dire = Traitement.HTTP_Contact("http://"+IPadress+"?"+URL+"&token="+Token);} // Envoie au RPi et enregistre sa réponse
+        	else{
+        		Toast toast= Toast.makeText(getApplicationContext(), // En cas d'échec, il prévient l'utilisateur
+    			    	"Vous n'avez pas de connexion internet !", 4000);  
+    					toast.setGravity(Gravity.TOP|Gravity.CENTER_HORIZONTAL, 0, 80);
+    					toast.show();}}
 		
 		while(A_dire==""){android.os.SystemClock.sleep(1000);} // Attend que A_dire soit bien remplie
 		
@@ -273,6 +290,7 @@ public class ShakeService extends Service implements TextToSpeech.OnInitListener
 
 	public void fin(){ // Finalise le processus
 		if (speech != null) {
+			speech.cancel();
 			speech.destroy();
 			speech = null;}
 		if(n==0){ // Si "Yana, cache-toi"

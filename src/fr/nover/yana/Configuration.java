@@ -7,6 +7,7 @@
 
 package fr.nover.yana;
 
+import fr.nover.yana.R;
 import android.os.Bundle;
 import android.preference.PreferenceActivity;
 
@@ -15,7 +16,7 @@ public class Configuration extends PreferenceActivity {
 	@SuppressWarnings("deprecation")
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		addPreferencesFromResource(R.xml.option_configuration);
+		addPreferencesFromResource(R.xml.option);
 	}
 
 }

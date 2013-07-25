@@ -50,10 +50,9 @@ public final class R {
         public static final int updateCom=0x7f0a000e;
     }
     public static final class layout {
-        public static final int commandes=0x7f030000;
-        public static final int interface_yana=0x7f030001;
-        public static final int merci=0x7f030002;
-        public static final int slideview=0x7f030003;
+        public static final int interface_yana=0x7f030000;
+        public static final int merci=0x7f030001;
+        public static final int slideview=0x7f030002;
     }
     public static final class menu {
         public static final int menu=0x7f090000;
@@ -101,6 +100,6 @@ public final class R {
         public static final int AppTheme=0x7f080001;
     }
     public static final class xml {
-        public static final int option_configuration=0x7f040000;
+        public static final int option=0x7f040000;
     }
 }
