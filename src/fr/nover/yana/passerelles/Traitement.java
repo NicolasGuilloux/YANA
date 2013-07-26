@@ -15,6 +15,11 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import android.annotation.SuppressLint;
+import android.content.Context;
+import android.content.SharedPreferences;
+import android.net.wifi.WifiInfo;
+import android.net.wifi.WifiManager;
+import android.preference.PreferenceManager;
 import android.util.Log;
 
 public class Traitement {
@@ -143,4 +148,22 @@ public class Traitement {
 			Commandes.add("Echec de compréhension par rapport à la réponse du Raspberry Pi. Veuillez présenter le problème à Nover.");}
 	}
 
+	public static boolean Verif_Reseau(Context context){ // Vérifie le réseau local
+		WifiManager wifiManager = (WifiManager) context.getSystemService(Context.WIFI_SERVICE);
+		   WifiInfo wifiInfo = wifiManager.getConnectionInfo();
+		   String SSID_wifi=wifiInfo.getSSID();
+		   if(SSID_wifi!=null && SSID_wifi.contains("\"")){
+			   SSID_wifi = SSID_wifi.replaceAll("\"", "");}
+		   Log.d("SSID",SSID_wifi);
+		   SharedPreferences preferences= PreferenceManager.getDefaultSharedPreferences(context);
+		   String SSID_local=preferences.getString("SSID", "");
+		   Log.d("SSID demandée",SSID_local);
+		   if(SSID_wifi.compareTo(SSID_local)==0 || SSID_local.compareTo("")==0){
+			   Log.d("Local","true");
+			   return true;}
+		   else{
+			   Log.d("Local","false");
+			   return false;}
+	}
+	
 }

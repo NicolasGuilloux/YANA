@@ -123,7 +123,10 @@ public class ShakeService extends Service implements TextToSpeech.OnInitListener
     
 	public void onInit(int status) { // En cas d'initialisation (après avoir initialisé le TTS)
 		SharedPreferences preferences= PreferenceManager.getDefaultSharedPreferences(this);
-		IPadress=preferences.getString("IPadress", ""); // Importe l'adresse du RPi
+		if(Traitement.Verif_Reseau(getApplicationContext())){
+			IPadress=preferences.getString("IPadress", "");} // Importe l'adresse du RPi
+    	else{IPadress=preferences.getString("IPadress_ext", "");}
+		
 		Token=preferences.getString("token", "");
 		
 		Toast t = Toast.makeText(getApplicationContext(),A_dire,Toast.LENGTH_SHORT); // Affiche la phrase dites par votre téléphone

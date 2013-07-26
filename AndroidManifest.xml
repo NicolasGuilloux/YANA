@@ -2,7 +2,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="fr.nover.yana"
     android:versionCode="1"
-    android:versionName="1.0.2" >
+    android:versionName="1.0.3" >
 
     <uses-sdk
         android:minSdkVersion="5"
@@ -12,6 +12,7 @@
     <uses-permission android:name="android.permission.KILL_BACKGROUND_PROCESSES" />
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
    
     <application
         android:allowBackup="true"

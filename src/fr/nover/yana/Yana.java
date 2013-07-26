@@ -150,21 +150,20 @@ public class Yana extends Activity implements TextToSpeech.OnInitListener{
 	    checkIntent.setAction(TextToSpeech.Engine.ACTION_CHECK_TTS_DATA);
 	    startActivityForResult(checkIntent, TTS);
 	    
-	    PackageInfo pInfo;
 		try {
-			pInfo = getPackageManager().getPackageInfo(getPackageName(), 0);
-		    Version = pInfo.versionName;
-		    Log.d("","La version de l'application est "+Version);
-		} catch (NameNotFoundException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
-		}
+			PackageInfo pInfo = getPackageManager().getPackageInfo(getPackageName(), 0);
+		    Version = pInfo.versionName;} 
+		catch (NameNotFoundException e1) {e1.printStackTrace();}
 	    
-	    if(!testMAJ && Box_MAJ){	// Vérifie la version d'Android
+	   if(!testMAJ && Box_MAJ){	// Vérifie la version d'Android
 		    JsonParser jParser = new JsonParser ();
 		 	try{
-		 		JSONObject json = jParser.getJSONFromUrl("http://192.168.1.84:81/maj.json");
-		 		String Version_dispo = json.getString("version");
+		 		JSONObject json = jParser.getJSONFromUrl("http://projet.idleman.fr/yana/maj.php");
+		 		JSONObject maj = json.getJSONObject("maj");
+		 		JSONObject yana_android = maj.getJSONObject("yana-android");
+		 		String Version_dispo = yana_android.getString("version");
+		 		Log.d("","Version de l'application : "+Version+". Version disponible : "+Version_dispo);
+		 		
 			 	if(Version_dispo.compareTo(Version)!=0){
 			 	    
 			 		new AlertDialog.Builder(this)
@@ -185,18 +184,19 @@ public class Yana extends Activity implements TextToSpeech.OnInitListener{
 			 }}
 		 	
 		 	catch(JSONException e){
+		 		Log.d("",""+e);
 		 		 Toast toast= Toast.makeText(getApplicationContext(),
 		 	     "Echec de la vérification de mise à jour.", 4000);  
 		 		 toast.show();}
 		 	
 		 	catch(Exception e){
+		 		Log.d("",""+e);
 		 		Toast toast= Toast.makeText(getApplicationContext(),
 				"Echec de la vérification de mise à jour.", 4000);  
-				toast.show();}}	
+				toast.show();}}
 	}
 	
-	public void onActivityResult(int requestCode, int resultCode, Intent data) // S'exécute lors d'un retour d'activité
-    {
+	public void onActivityResult(int requestCode, int resultCode, Intent data){ // S'exécute lors d'un retour d'activité
     switch (requestCode) {
 		case RESULT_SPEECH: { // Dès que la reconnaissance vocale est terminée
 			if (resultCode == RESULT_OK && null != data) {
@@ -222,15 +222,13 @@ public class Yana extends Activity implements TextToSpeech.OnInitListener{
 		 	    .setMessage("Android ne détecte aucun dispositif de Synthèse Vocale (TTS). Voulez vous installer un programme de Synthèse Vocale (sinon l'application ne sera pas entièrement fonctionnelle) ?")
 		 	    .setNegativeButton("Non", new DialogInterface.OnClickListener() {
 		 	        public void onClick(DialogInterface dialog, int which) { 
-		 	            testTTS=true;
-		 	        }
+		 	            testTTS=true;}
 		 	     })
 		 	    .setPositiveButton("Oui", new DialogInterface.OnClickListener() {
 		 	        public void onClick(DialogInterface dialog, int which) { 
 		 	        	Intent installIntent = new Intent();
 			            installIntent.setAction(TextToSpeech.Engine.ACTION_INSTALL_TTS_DATA);
-			            startActivity(installIntent);
-		 	        }
+			            startActivity(installIntent);}
 		 	     })
 		 	    .show();}
 			else{testTTS=true;}}
@@ -244,6 +242,10 @@ public class Yana extends Activity implements TextToSpeech.OnInitListener{
 	        mTts.stop();
 	        mTts.shutdown();}
 	    super.onDestroy();}
+	
+	public void onResume(){
+		getConfig();
+		super.onResume();}
 	
     public boolean onCreateOptionsMenu(Menu menu) { // Il dit juste que y'a telle ou telle chose dans le menu
 		getMenuInflater().inflate(R.menu.menu, menu);
@@ -259,9 +261,14 @@ public class Yana extends Activity implements TextToSpeech.OnInitListener{
     void getConfig(){ // Importe les paramètres
     	SharedPreferences preferences= PreferenceManager.getDefaultSharedPreferences(this);
     	
-    	String V_string=preferences.getString("IPadress", ""); // Importe l'adresse du RPi
-    	if(V_string != ""){
-    		IPadress.setText(V_string);}
+    	String ip_adress;
+    	if(Traitement.Verif_Reseau(getApplicationContext())){
+    		ip_adress=preferences.getString("IPadress", "");}// Importe l'adresse du RPi
+    	else{
+    		ip_adress=preferences.getString("IPadress_ext", "");}// Importe l'adresse du RPi
+    	
+    	if(ip_adress != ""){
+    		IPadress.setText(ip_adress);}
     		
     	Box_TTS=preferences.getBoolean("tts_pref", true); // Importe l'état de la box (autorise ou non le TTS)
     	if(Box_TTS==false){
