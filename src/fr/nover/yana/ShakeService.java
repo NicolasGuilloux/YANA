@@ -51,7 +51,9 @@ public class ShakeService extends Service implements TextToSpeech.OnInitListener
     private Sensor mAccelerometer;
     
     private TextToSpeech mTts; // Déclare le TTS
+    boolean TTS_Box; // Permet de savoir si le TTS est autorisé
     Random random = new Random(); // Pour un message aléatoire
+    String Nom, Prénom, Sexe, Pseudo; // Pour l'identité de l'utilisateur
     
 	String A_envoyer, A_dire="", IPadress, Token; // Déclare les deux variables de conversation et l'adresse IP
     
@@ -95,6 +97,7 @@ public class ShakeService extends Service implements TextToSpeech.OnInitListener
             public void onShake(int count) { // En cas de Shake, si l'écran est allumé et qu'il n'y a pas déjà eu Shake
             	if(last_shake==false && ScreenReceiver.wasScreenOn){
             		last_shake=true;
+            		getConfig();
             		A_dire=Random_String();
             		getTTS();}
         }});
@@ -122,19 +125,13 @@ public class ShakeService extends Service implements TextToSpeech.OnInitListener
     }
     
 	public void onInit(int status) { // En cas d'initialisation (après avoir initialisé le TTS)
-		SharedPreferences preferences= PreferenceManager.getDefaultSharedPreferences(this);
-		if(Traitement.Verif_Reseau(getApplicationContext())){
-			IPadress=preferences.getString("IPadress", "");} // Importe l'adresse du RPi
-    	else{IPadress=preferences.getString("IPadress_ext", "");}
-		
-		Token=preferences.getString("token", "");
 		
 		Toast t = Toast.makeText(getApplicationContext(),A_dire,Toast.LENGTH_SHORT); // Affiche la phrase dites par votre téléphone
 		t.show();
 		
-		if(preferences.getBoolean("tts_pref", true)==true){ // Si on autorise le TTS
+		if(TTS_Box){ // Si on autorise le TTS
 			mTts.speak(A_dire,TextToSpeech.QUEUE_FLUSH, null); // Il dicte sa phrase
-		if(last_init==false){ // Si il n'a pas déjà initialisé le processus de reconnaissance vocale
+		if(!last_init){ // Si il n'a pas déjà initialisé le processus de reconnaissance vocale
 			android.os.SystemClock.sleep(1000);
 			startVoiceRecognitionCycle();} // Il l'effectue au bout d'une seconde
 		else{fin();}} // Sinon il remet tout à 0
@@ -280,14 +277,42 @@ public class ShakeService extends Service implements TextToSpeech.OnInitListener
 	@SuppressLint("NewApi")
 	public String Random_String(){ // Choisit une chaine de caractères au hasard
 		ArrayList<String> list = new ArrayList<String>();
-		list.add("Que voulez-vous, maître ?");
 		list.add("Comment puis-je vous aider, boss ?");
 		list.add("Un truc à dire, ma poule ?!");
+		
+		if(Prénom.compareTo("")!=0){
+			list.add("Oui, "+Prénom+" ?");}
+		
+		if(Nom.compareTo("")!=0){
+			list.add("Que voulez-vous, maître "+Nom+" ?");}
+		
+		if(Sexe.compareTo("")!=0){
+			list.add("Puis-je faire quelque chose pour vous, "+ Sexe+" ?");}
+		
+		if(Nom.compareTo("")!=0 && Sexe.compareTo("")!=0){
+			list.add(Sexe+" "+Nom+", je suis tout à vous !");}
+		
+		if(Pseudo.compareTo("")!=0){
+			list.add("Que veux-tu, mon petit "+Pseudo+" ?");}
 		
 		int randomInt = random.nextInt(list.size());
         String Retour = list.get(randomInt).toString();
 		
 		return Retour;}
+	
+	public void getConfig(){ // Importe les options
+		SharedPreferences preferences= PreferenceManager.getDefaultSharedPreferences(this);
+		if(Traitement.Verif_Reseau(getApplicationContext())){
+			IPadress=preferences.getString("IPadress", "");} // Importe l'adresse du RPi
+    	else{IPadress=preferences.getString("IPadress_ext", "");}
+		
+		Token=preferences.getString("token", "");
+		TTS_Box=preferences.getBoolean("tts_pref", true);
+		
+		Nom=preferences.getString("name", ""); // Importe l'identité de la personne
+		Prénom=preferences.getString("surname", "");
+		Sexe=preferences.getString("sexe", "");
+		Pseudo=preferences.getString("nickname", "");}
 
 	public void onEvent(int arg0, Bundle arg1){}
 

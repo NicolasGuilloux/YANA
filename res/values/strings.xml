@@ -4,6 +4,7 @@
     <string name="configuration">Configuration</string>
     <string name="bienvenue">Bienvenue sur l\'interface Android de notre cher Yana ! Entrez bien l\'adresse de votre RPi dans la configuration.</string>
     <string name="IPadress">192.168.1.x/yana-server/action.php</string>
+    <string name="IPadress_exterieure">www.adressedurpi.fr/yana-server/action.php</string>
     <string name="Soninfo">Voulez-vous une réponse audio ?</string>
     <string name="Recinfo">Cliquez pour donner un ordre</string>
     <string name="update">Update des commandes</string>
@@ -12,5 +13,38 @@
     <string name="bienvenue_first">Bienvenue sur l\'application "Yana". Elle vous permettra de dialoguer via commandes vocales à votre Raspberry Pi. \nPour plus amples informations sur ce système, veuillez visiter le blog de Idleman. \n\nBonjour ! Je suis Yana. Ceci est mon premier lancement. Nous allons donc configurer ensemble cette application !</string>
     <string name="Suivant">Suivant</string>
     <string name="Token">Token</string>
+    
+    <string name="next">Suivant</string>
+    <string name="prev">Précédent</string>
+    <string name="finish">Terminer</string>
+    <string name="review">Récapitulatif</string>
+
+    <string name="label_your_name">Nom</string>
+    <string name="label_your_surname">Prénom</string>
+    <string name="label_your_nickname">Pseudonyme</string>
+    <string name="hint_your_name">Exemple : Akalipovitch</string>
+    <string name="hint_your_surname">Exemple : Bernard</string>
+    <string name="hint_your_nickname">Exemple : Idlever</string>
+    
+    <string name="ipadress_int">Lien interne</string>
+    <string name="SSID">Nom du réseau local</string>
+    <string name="SSID_info">Nom de la box</string>
+    <string name="SSID_btn">Importer</string>
+    <string name="ipadress_ext">Lien externe</string>
+    
+    <string name="Value1">Mademoiselle</string>
+	<string name="Value2">Madame</string>
+	<string name="Value3">Monsieur</string>
+	
+	<string-array name="Entries">
+	            <item>@string/Value1</item>
+	            <item>@string/Value2</item>
+	            <item>@string/Value3</item>
+	</string-array>
+	<string-array name="Values">
+	            <item>VALUE_1</item>
+	            <item>VALUE_2</item>
+	            <item>VALUE_3</item>
+	</string-array>
 
 </resources>

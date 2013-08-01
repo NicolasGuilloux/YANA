@@ -8,11 +8,25 @@
 package fr.nover.yana;
 
 public final class R {
+    public static final class array {
+        public static final int Entries=0x7f080000;
+        public static final int Values=0x7f080001;
+    }
     public static final class attr {
+        /** <p>Must be a reference to another resource, in the form "<code>@[+][<i>package</i>:]<i>type</i>:<i>name</i></code>"
+or to a theme attribute in the form "<code>?[<i>package</i>:][<i>type</i>:]<i>name</i></code>".
+         */
+        public static final int textAppearanceFinish=0x7f010000;
     }
     public static final class color {
         public static final int envoi=0x7f050000;
         public static final int recu=0x7f050001;
+        public static final int review_green=0x7f050008;
+        public static final int step_pager_next_tab_color=0x7f050007;
+        public static final int step_pager_previous_tab_color=0x7f050004;
+        public static final int step_pager_selected_last_tab_color=0x7f050006;
+        public static final int step_pager_selected_tab_color=0x7f050005;
+        public static final int text_light=0x7f050009;
         public static final int theme=0x7f050002;
         public static final int theme_icon=0x7f050003;
     }
@@ -21,67 +35,100 @@ public final class R {
          */
         public static final int activity_horizontal_margin=0x7f060000;
         public static final int activity_vertical_margin=0x7f060001;
+        public static final int step_pager_tab_height=0x7f060003;
+        public static final int step_pager_tab_spacing=0x7f060004;
+        public static final int step_pager_tab_width=0x7f060002;
     }
     public static final class drawable {
         public static final int above_shadow=0x7f020000;
         public static final int envoi=0x7f020001;
-        public static final int graphic=0x7f020002;
+        public static final int finish_background=0x7f020002;
         public static final int ic_launcher=0x7f020003;
         public static final int ip_adress=0x7f020004;
-        public static final int linearborder=0x7f020005;
-        public static final int reponse=0x7f020006;
+        public static final int item_focused=0x7f020005;
+        public static final int item_pressed=0x7f020006;
+        public static final int linearborder=0x7f020007;
+        public static final int reponse=0x7f020008;
+        public static final int selectable_item_background=0x7f020009;
     }
     public static final class id {
-        public static final int Btnconfiguration=0x7f0a000f;
-        public static final int IPadress=0x7f0a0002;
-        public static final int btnRec=0x7f0a0004;
-        public static final int commandes_layout=0x7f0a000a;
-        public static final int conversation=0x7f0a0006;
-        public static final int conversation_scroll=0x7f0a0005;
-        public static final int drawer=0x7f0a0007;
-        public static final int handle=0x7f0a0009;
-        public static final int ip_adress=0x7f0a0001;
-        public static final int ipadress_conf=0x7f0a000d;
-        public static final int layout_interface=0x7f0a0000;
-        public static final int merci=0x7f0a000b;
-        public static final int scroll_commandes=0x7f0a0008;
-        public static final int slideview=0x7f0a000c;
-        public static final int tts_pref_false=0x7f0a0003;
-        public static final int updateCom=0x7f0a000e;
+        public static final int Btnconfiguration=0x7f0b001a;
+        public static final int IPadress=0x7f0b000d;
+        public static final int SSID=0x7f0b0009;
+        public static final int btnRec=0x7f0b000f;
+        public static final int commandes_layout=0x7f0b0015;
+        public static final int conversation=0x7f0b0011;
+        public static final int conversation_scroll=0x7f0b0010;
+        public static final int divider=0x7f0b0002;
+        public static final int drawer=0x7f0b0012;
+        public static final int handle=0x7f0b0014;
+        public static final int ip_adress=0x7f0b000c;
+        public static final int ipadress_conf=0x7f0b0018;
+        public static final int ipadress_ext=0x7f0b000a;
+        public static final int ipadress_int=0x7f0b0008;
+        public static final int layout_interface=0x7f0b000b;
+        public static final int merci=0x7f0b0016;
+        public static final int next_button=0x7f0b0004;
+        public static final int pager=0x7f0b0001;
+        public static final int prev_button=0x7f0b0003;
+        public static final int scroll_commandes=0x7f0b0013;
+        public static final int slideview=0x7f0b0017;
+        public static final int strip=0x7f0b0000;
+        public static final int tts_pref_false=0x7f0b000e;
+        public static final int updateCom=0x7f0b0019;
+        public static final int your_name=0x7f0b0005;
+        public static final int your_nickname=0x7f0b0007;
+        public static final int your_surname=0x7f0b0006;
     }
     public static final class layout {
-        public static final int interface_yana=0x7f030000;
-        public static final int merci=0x7f030001;
-        public static final int slideview=0x7f030002;
+        public static final int activity_main=0x7f030000;
+        public static final int fragment_page=0x7f030001;
+        public static final int fragment_page_customer_info=0x7f030002;
+        public static final int fragment_page_ipadress_ext_info=0x7f030003;
+        public static final int fragment_page_ipadress_info=0x7f030004;
+        public static final int interface_yana=0x7f030005;
+        public static final int list_item_review=0x7f030006;
+        public static final int merci=0x7f030007;
+        public static final int slideview=0x7f030008;
     }
     public static final class menu {
-        public static final int menu=0x7f090000;
+        public static final int menu=0x7f0a0000;
     }
     public static final class string {
         public static final int IPadress=0x7f070003;
-        public static final int Merci=0x7f070008;
-        public static final int Recinfo=0x7f070005;
-        public static final int Soninfo=0x7f070004;
-        public static final int Suivant=0x7f07000a;
-        public static final int Token=0x7f07000b;
+        public static final int IPadress_exterieure=0x7f070004;
+        public static final int Merci=0x7f070009;
+        public static final int Recinfo=0x7f070006;
+        public static final int SSID=0x7f070018;
+        public static final int SSID_btn=0x7f07001a;
+        public static final int SSID_info=0x7f070019;
+        public static final int Soninfo=0x7f070005;
+        public static final int Suivant=0x7f07000b;
+        public static final int Token=0x7f07000c;
+        public static final int Value1=0x7f07001c;
+        public static final int Value2=0x7f07001d;
+        public static final int Value3=0x7f07001e;
         public static final int app_name=0x7f070000;
         public static final int bienvenue=0x7f070002;
-        public static final int bienvenue_first=0x7f070009;
-        public static final int commandes=0x7f070007;
+        public static final int bienvenue_first=0x7f07000a;
+        public static final int commandes=0x7f070008;
         public static final int configuration=0x7f070001;
-        public static final int update=0x7f070006;
+        public static final int finish=0x7f07000f;
+        public static final int hint_your_name=0x7f070014;
+        public static final int hint_your_nickname=0x7f070016;
+        public static final int hint_your_surname=0x7f070015;
+        public static final int ipadress_ext=0x7f07001b;
+        public static final int ipadress_int=0x7f070017;
+        public static final int label_your_name=0x7f070011;
+        public static final int label_your_nickname=0x7f070013;
+        public static final int label_your_surname=0x7f070012;
+        public static final int next=0x7f07000d;
+        public static final int prev=0x7f07000e;
+        public static final int review=0x7f070010;
+        public static final int update=0x7f070007;
     }
     public static final class style {
         /** 
-        Base application theme, dependent on API level. This theme is replaced
-        by AppBaseTheme from res/values-vXX/styles.xml on newer devices.
-    
-
-            Theme customizations available in newer API levels can go in
-            res/values-vXX/styles.xml, while customizations related to
-            backward-compatibility can go here.
-        
-
         Base application theme for API 11+. This theme completely replaces
         AppBaseTheme from res/values/styles.xml on API 11+ devices.
     
@@ -93,13 +140,39 @@ public final class R {
     
  API 14 theme customizations can go here. 
          */
-        public static final int AppBaseTheme=0x7f080000;
-        /**  Application theme. 
- All customizations that are NOT specific to a particular API-level can go here. 
-         */
-        public static final int AppTheme=0x7f080001;
+        public static final int AppBaseTheme=0x7f090005;
+        public static final int AppTheme=0x7f090000;
+        public static final int TextAppearanceFinish=0x7f090001;
+        public static final int WizardFormLabel=0x7f090004;
+        public static final int WizardPageContainer=0x7f090002;
+        public static final int WizardPageTitle=0x7f090003;
     }
     public static final class xml {
         public static final int option=0x7f040000;
     }
+    public static final class styleable {
+        /** Attributes that can be used with a AppTheme.
+           <p>Includes the following attributes:</p>
+           <table>
+           <colgroup align="left" />
+           <colgroup align="left" />
+           <tr><th>Attribute</th><th>Description</th></tr>
+           <tr><td><code>{@link #AppTheme_textAppearanceFinish fr.nover.yana:textAppearanceFinish}</code></td><td></td></tr>
+           </table>
+           @see #AppTheme_textAppearanceFinish
+         */
+        public static final int[] AppTheme = {
+            0x7f010000
+        };
+        /**
+          <p>This symbol is the offset where the {@link fr.nover.yana.R.attr#textAppearanceFinish}
+          attribute's value can be found in the {@link #AppTheme} array.
+
+
+          <p>Must be a reference to another resource, in the form "<code>@[+][<i>package</i>:]<i>type</i>:<i>name</i></code>"
+or to a theme attribute in the form "<code>?[<i>package</i>:][<i>type</i>:]<i>name</i></code>".
+          @attr name android:textAppearanceFinish
+        */
+        public static final int AppTheme_textAppearanceFinish = 0;
+    };
 }

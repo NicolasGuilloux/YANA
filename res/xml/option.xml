@@ -17,19 +17,26 @@
 				    android:inputType="textWebEditText"
 					android:summary="Entrez l'adresse de votre page (sans http://)">
 				</EditTextPreference>
-				<EditTextPreference
-					android:key="IPadress_ext"
-					android:title="Adresse de la page (externe)"
-					android:defaultValue="www.adressedurpi.fr/yana-server/action.php"
-				    android:inputType="textWebEditText"
-					android:summary="Entrez l'adresse de votre page (sans http://)">
-				</EditTextPreference>
-				<EditTextPreference
-					android:key="SSID"
-					android:title="Nom du réseau local connecté au Raspberry"
-				    android:inputType="textWebEditText"
-					android:summary="Entrez le nom du réseau (SSID)">
-				</EditTextPreference>
+				<CheckBoxPreference
+		            android:key="externe"
+		            android:summary="Voulez-vous utiliser Yana sur Internet ?"
+		            android:title="Cochez pour activez la reconnaissance automatique du réseau local." />
+		
+					<EditTextPreference
+						android:key="IPadress_ext"
+						android:title="Adresse de la page (externe)"
+						android:defaultValue="www.adressedurpi.fr/yana-server/action.php"
+					    android:inputType="textWebEditText"
+						android:summary="Entrez l'adresse de votre page (sans http://)"
+		           		android:dependency="externe">
+					</EditTextPreference>
+					<EditTextPreference
+						android:key="SSID"
+						android:title="Nom du réseau local connecté au Raspberry"
+					    android:inputType="textWebEditText"
+						android:summary="Entrez le nom du réseau (SSID)" 
+		           		android:dependency="externe">
+					</EditTextPreference>
 			</PreferenceCategory>
 			<PreferenceCategory android:title="Identification">
 				<EditTextPreference
@@ -73,31 +80,65 @@
 						android:summary="Augmentez pour le rendre moins sensible">
 					</EditTextPreference>
 				</PreferenceCategory>
+				
+	            <PreferenceCategory android:title="Au démarrage...">
+					<CheckBoxPreference
+					    android:key="update"
+					    android:title="Update des commandes au démarrage"
+					    android:summary="Cochez pour activer l'update des commandes au démarrage de l'application"
+					    android:defaultValue="False" />
+					<CheckBoxPreference
+					    android:key="maj"
+					    android:title="Vérification d'une mise à jour au démarrage"
+					    android:summary="Cochez pour activer la vérification d'une mise à jour au démarrage de l'application"
+					    android:defaultValue="True" />
+					<CheckBoxPreference
+					    android:key="bienvenue"
+					    android:title="Message de bienvenue au démarrage"
+					    android:summary="Cochez pour activer le message de bienvenue au démarrage"
+					    android:dependency="tts_pref"
+					    android:defaultValue="True" />
+				</PreferenceCategory>
         </PreferenceScreen>
         
         <PreferenceScreen
-            android:key="Config_Services"
-            android:title="Au démarrage..."
+            android:key="Config_infos"
+            android:title="Vos informations"
             android:persistent="false">
-            <PreferenceCategory android:title="Cochez pour activer">
-				<CheckBoxPreference
-				    android:key="update"
-				    android:title="Update des commandes au démarrage"
-				    android:summary="Cochez pour activer l'update des commandes au démarrage de l'application"
-				    android:defaultValue="False" />
-				<CheckBoxPreference
-				    android:key="maj"
-				    android:title="Vérification d'une mise à jour au démarrage"
-				    android:summary="Cochez pour activer la vérification d'une mise à jour au démarrage de l'application"
-				    android:defaultValue="True" />
-				<CheckBoxPreference
-				    android:key="TTS_presence"
-				    android:title="Vérification de la présence d'un TTS"
-				    android:summary="Cochez pour activer la vérification de la présence d'un TTS au démarrage de l'application"
-				    android:defaultValue="True" />
-			</PreferenceCategory>
+            
+            	<ListPreference 
+            	    android:title="Sexe" 
+				    android:summary="Entrez votre sexe."
+				    android:key="sexe" />
+            
+           		 <EditTextPreference
+					android:key="name"
+					android:title="Votre nom"
+					android:inputType="text" 
+					android:summary="Entrez votre nom">
+				</EditTextPreference>
+				<EditTextPreference
+					android:key="surname"
+					android:title="Votre prénom"
+					android:inputType="text" 
+					android:summary="Entrez votre prénom">
+				</EditTextPreference>
+				<EditTextPreference
+					android:key="nickname"
+					android:title="Votre pseudonyme"
+					android:inputType="text" 
+					android:summary="Entrez votre pseudonyme">
+				</EditTextPreference>
+            
         </PreferenceScreen>
+        <PreferenceCategory >
         
+	        <Preference android:title="Relancer l'assistant d'installation"
+	                android:key="button"
+	                android:summary="Cliquez pour relancer l'assistant d'installation"/>
+        
+       </PreferenceCategory>
+       <PreferenceCategory />
        <PreferenceCategory
 		    android:title="Category Title"
 	   		android:layout="@layout/merci"  />

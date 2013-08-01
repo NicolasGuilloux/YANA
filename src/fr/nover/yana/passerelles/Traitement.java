@@ -17,6 +17,7 @@ import org.json.JSONObject;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.net.ConnectivityManager;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
 import android.preference.PreferenceManager;
@@ -151,6 +152,8 @@ public class Traitement {
 	public static boolean Verif_Reseau(Context context){ // Vérifie le réseau local
 		WifiManager wifiManager = (WifiManager) context.getSystemService(Context.WIFI_SERVICE);
 		   WifiInfo wifiInfo = wifiManager.getConnectionInfo();
+		   ConnectivityManager connec = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
+		   android.net.NetworkInfo wifi = connec.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
 		   String SSID_wifi=wifiInfo.getSSID();
 		   if(SSID_wifi!=null && SSID_wifi.contains("\"")){
 			   SSID_wifi = SSID_wifi.replaceAll("\"", "");}
@@ -158,9 +161,13 @@ public class Traitement {
 		   SharedPreferences preferences= PreferenceManager.getDefaultSharedPreferences(context);
 		   String SSID_local=preferences.getString("SSID", "");
 		   Log.d("SSID demandée",SSID_local);
-		   if(SSID_wifi.compareTo(SSID_local)==0 || SSID_local.compareTo("")==0){
-			   Log.d("Local","true");
-			   return true;}
+		   if(wifi.isConnected()){
+			   if(SSID_wifi.compareTo(SSID_local)==0 || SSID_local.compareTo("")==0){
+				   Log.d("Local","true");
+				   return true;}
+		   else{
+			   Log.d("Local","false");
+			   return false;}}
 		   else{
 			   Log.d("Local","false");
 			   return false;}

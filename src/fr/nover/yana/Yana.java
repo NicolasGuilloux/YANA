@@ -47,10 +47,12 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import java.util.ArrayList;
+import java.util.Random;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import fr.nover.yana.assistant_installation.Assistant_Installation;
 import fr.nover.yana.passerelles.JsonParser;
 import fr.nover.yana.passerelles.Traitement;
 import fr.nover.yana.passerelles.ShakeDetector;
@@ -64,10 +66,14 @@ public class Yana extends Activity implements TextToSpeech.OnInitListener{
 	ImageButton btnRec; // Bouton pour lancer l'initialisation
 	ImageView ip_adress; // Affichage et actions du bouton à côté de ip_adress
 	String Recrep="", Rep=""; // Déclare les variables correspondant aux divers éléments de la conversation avec le RPi
+    String Nom, Prénom, Sexe, Pseudo; // Pour l'identité de l'utilisateur
+    boolean bienvenue;
+    static boolean bienvenue_fait=false;
+    Random random = new Random(); // Pour un message aléatoire
 		
     private TextToSpeech mTts;// Déclare le TTS
     
-    static boolean testTTS = false, testMAJ = false;
+    static boolean testTTS = false, testMAJ = false, AI, TTS_TEST;
 	    
     	// A propos du Service (Intent pour le lancer et servstate pour savoir l'état du service)
 	private Intent ShakeService;
@@ -75,6 +81,8 @@ public class Yana extends Activity implements TextToSpeech.OnInitListener{
 	boolean Box_TTS, Box_MAJ, Box_TTS_presence;
 	
 	String Token="",Version;
+	
+	SharedPreferences.Editor geted;
 	
 		// Conversation et liste de commandes
 	int n=1;
@@ -109,7 +117,7 @@ public class Yana extends Activity implements TextToSpeech.OnInitListener{
 	 			new IntentFilter("NewRecrep"));
 	    LocalBroadcastManager.getInstance(this).registerReceiver(NewRep,
 				new IntentFilter("NewRep"));
-	    
+
     	IPadress = (EditText)findViewById(R.id.IPadress); // Déclare les éléments visibles
     	tts_pref_false = (TextView) findViewById(R.id.tts_pref_false);
     	btnRec = (ImageButton) findViewById(R.id.btnRec);
@@ -117,12 +125,14 @@ public class Yana extends Activity implements TextToSpeech.OnInitListener{
     	
     	StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build(); // Empêche un bug de contact avec le RPi (je ne sais pas pourquoi :))
     	StrictMode.setThreadPolicy(policy);
+
+		geted = PreferenceManager.getDefaultSharedPreferences(this).edit(); // Pour éditer les options
     	
 		IPadress.setInputType(InputType.TYPE_TEXT_VARIATION_WEB_EDIT_TEXT); // Définit l'EditText comme un champ URL
     	
     	getConfig(); // Actualise la configuration
     	if(m==999){Commandes_actu();}
-    	if(update){Commandes_actu();} // Actualise les commandes
+    	if(update){Commandes_actu();} // Actualise les commandes si la config correspond
     		
     	ip_adress.setOnClickListener(new View.OnClickListener() { // Lance la configuration si on clique sur l'image à côté de l'adresse IP
     		@Override
@@ -145,55 +155,82 @@ public class Yana extends Activity implements TextToSpeech.OnInitListener{
 	
 	public void onStart(){
 	    super.onStart();
-			// Vérifie la présence du TTS. S'il n'y en a pas, il propose une installation
-    	Intent checkIntent = new Intent();
-	    checkIntent.setAction(TextToSpeech.Engine.ACTION_CHECK_TTS_DATA);
-	    startActivityForResult(checkIntent, TTS);
 	    
-		try {
-			PackageInfo pInfo = getPackageManager().getPackageInfo(getPackageName(), 0);
-		    Version = pInfo.versionName;} 
-		catch (NameNotFoundException e1) {e1.printStackTrace();}
+    	if(AI){    		
+    		Intent SetupWizard = new Intent(this, Assistant_Installation.class);
+    		startActivityForResult(SetupWizard, OPTION);}
 	    
-	   if(!testMAJ && Box_MAJ){	// Vérifie la version d'Android
-		    JsonParser jParser = new JsonParser ();
-		 	try{
-		 		JSONObject json = jParser.getJSONFromUrl("http://projet.idleman.fr/yana/maj.php");
-		 		JSONObject maj = json.getJSONObject("maj");
-		 		JSONObject yana_android = maj.getJSONObject("yana-android");
-		 		String Version_dispo = yana_android.getString("version");
-		 		Log.d("","Version de l'application : "+Version+". Version disponible : "+Version_dispo);
-		 		
-			 	if(Version_dispo.compareTo(Version)!=0){
-			 	    
-			 		new AlertDialog.Builder(this)
-			 	    .setTitle("Une nouvelle version est disponible.")
-			 	    .setMessage("La version de votre application est "+Version+" alors que la version "+Version_dispo+" est disponible. Voulez vous faire la mise à jour maintenant ?")
-			 	    .setNegativeButton("Non", new DialogInterface.OnClickListener() {
-			 	        public void onClick(DialogInterface dialog, int which) { 
-			 	            // do nothing
-			 	        }
-			 	     })
-			 	    .setPositiveButton("Oui", new DialogInterface.OnClickListener() {
-			 	        public void onClick(DialogInterface dialog, int which) { 
-			 	        	Intent MAJ = new Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/Etsuni/YANA/raw/master/YANA.apk"));
-		        			startActivity(MAJ);}
-			 	     })
-			 	     .show();
-			 		testMAJ=true;
-			 }}
-		 	
-		 	catch(JSONException e){
-		 		Log.d("",""+e);
-		 		 Toast toast= Toast.makeText(getApplicationContext(),
-		 	     "Echec de la vérification de mise à jour.", 4000);  
-		 		 toast.show();}
-		 	
-		 	catch(Exception e){
-		 		Log.d("",""+e);
-		 		Toast toast= Toast.makeText(getApplicationContext(),
-				"Echec de la vérification de mise à jour.", 4000);  
-				toast.show();}}
+    	else{
+    		if(TTS_TEST){
+    	
+		    	new AlertDialog.Builder(this)
+		 	    .setTitle("Vérification du TTS")
+		 	    .setMessage("Voulez-vous tester votre TTS afin de savoir s'il est bien fonctionnel ? Attention : Ce test n'est proposé qu'au premier démarrage. Il est conseillé de dire Oui. Si l'écran devient noir et l'application crash, vous devriez vérifier manuellement l'application.")
+		 	    .setNegativeButton("Non", new DialogInterface.OnClickListener() {
+		 	        public void onClick(DialogInterface dialog, int which) {
+	            		geted.putBoolean("TTS_TEST", false);
+	            		geted.commit();
+		 	        }
+		 	     })
+		 	    .setPositiveButton("Oui", new DialogInterface.OnClickListener() {
+		 	        public void onClick(DialogInterface dialog, int which) { 
+		 	        // Vérifie la présence du TTS. S'il n'y en a pas, il propose une installation
+			 	       	Intent checkIntent = new Intent();
+			 	   	    checkIntent.setAction(TextToSpeech.Engine.ACTION_CHECK_TTS_DATA);
+			 	   	    startActivityForResult(checkIntent, TTS);}
+		 	     })
+		 	     .show();}
+		    
+			try {
+				PackageInfo pInfo = getPackageManager().getPackageInfo(getPackageName(), 0);
+			    Version = pInfo.versionName;} 
+			catch (NameNotFoundException e1) {e1.printStackTrace();}
+		    
+		   if(!testMAJ && Box_MAJ){	// Vérifie la version d'Android
+			    JsonParser jParser = new JsonParser ();
+			 	try{
+			 		JSONObject json = jParser.getJSONFromUrl("http://projet.idleman.fr/yana/maj.php");
+			 		JSONObject maj = json.getJSONObject("maj");
+			 		JSONObject yana_android = maj.getJSONObject("yana-android");
+			 		String Version_dispo = yana_android.getString("version");
+			 		Log.d("","Version de l'application : "+Version+". Version disponible : "+Version_dispo);
+			 		
+				 	if(Version_dispo.compareTo(Version)!=0){
+				 	    
+				 		new AlertDialog.Builder(this)
+				 	    .setTitle("Une nouvelle version est disponible.")
+				 	    .setMessage("La version de votre application est "+Version+" alors que la version "+Version_dispo+" est disponible. Voulez vous faire la mise à jour maintenant ?")
+				 	    .setNegativeButton("Non", new DialogInterface.OnClickListener() {
+				 	        public void onClick(DialogInterface dialog, int which) { 
+				 	            // do nothing
+				 	        }
+				 	     })
+				 	    .setPositiveButton("Oui", new DialogInterface.OnClickListener() {
+				 	        public void onClick(DialogInterface dialog, int which) { 
+				 	        	Intent MAJ = new Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/Etsuni/YANA/raw/master/YANA.apk"));
+			        			startActivity(MAJ);}
+				 	     })
+				 	     .show();
+				 		testMAJ=true;
+				 }}
+			 	
+			 	catch(JSONException e){
+			 		Log.d("",""+e);
+			 		 Toast toast= Toast.makeText(getApplicationContext(),
+			 	     "Echec de la vérification de mise à jour.", 4000);  
+			 		 toast.show();}
+			 	
+			 	catch(Exception e){
+			 		Log.d("",""+e);
+			 		Toast toast= Toast.makeText(getApplicationContext(),
+					"Echec de la vérification de mise à jour.", 4000);  
+					toast.show();}}}
+	   
+
+	   	if(bienvenue && Box_TTS && !bienvenue_fait){
+	   		bienvenue_fait=true;
+	   		Rep = Random_String();
+	   		mTts = new TextToSpeech(this, this);}
 	}
 	
 	public void onActivityResult(int requestCode, int resultCode, Intent data){ // S'exécute lors d'un retour d'activité
@@ -214,9 +251,13 @@ public class Yana extends Activity implements TextToSpeech.OnInitListener{
 				Prétraitement(Ordre, URL); // Envoie en Prétraitement
 				break;}}
 		
-		case OPTION: {getConfig();} // Dès un retour de la configuration, il la recharge
+		case OPTION: { // Dès un retour de la configuration, il la recharge
+			getConfig();
+			break;} 
 		case TTS:{
-			if (resultCode != TextToSpeech.Engine.CHECK_VOICE_DATA_PASS && testTTS==false && Box_TTS_presence) {
+    		geted.putBoolean("TTS_TEST", false);
+    		geted.commit();
+			if (resultCode != TextToSpeech.Engine.CHECK_VOICE_DATA_PASS) {
 				new AlertDialog.Builder(this)
 		 	    .setTitle("Il n'y a pas un TTS utilisable")
 		 	    .setMessage("Android ne détecte aucun dispositif de Synthèse Vocale (TTS). Voulez vous installer un programme de Synthèse Vocale (sinon l'application ne sera pas entièrement fonctionnelle) ?")
@@ -231,11 +272,18 @@ public class Yana extends Activity implements TextToSpeech.OnInitListener{
 			            startActivity(installIntent);}
 		 	     })
 		 	    .show();}
-			else{testTTS=true;}}
+			else if (TTS_TEST){
+				testTTS=true;
+				Toast t = Toast.makeText(getApplicationContext(),
+						"Votre TTS semble normal :)",
+						Toast.LENGTH_SHORT);
+			        	t.show();}}
+			break;
 	}}
 
 	public void onInit(int i){ // S'exécute dès la création du mTts
-	    mTts.speak(Rep,TextToSpeech.QUEUE_FLUSH,null);}
+	    mTts.speak(Rep,TextToSpeech.QUEUE_FLUSH,null);
+	    Rep="";} // Au cas où Rep reste le même à la prochaine déclaration du TTS
 
 	public void onDestroy(){ // Quitte le TTS quand l'application se termine
 	    if (mTts != null){
@@ -269,6 +317,8 @@ public class Yana extends Activity implements TextToSpeech.OnInitListener{
     	
     	if(ip_adress != ""){
     		IPadress.setText(ip_adress);}
+    	
+    	AI = preferences.getBoolean("AI", true);
     		
     	Box_TTS=preferences.getBoolean("tts_pref", true); // Importe l'état de la box (autorise ou non le TTS)
     	if(Box_TTS==false){
@@ -276,12 +326,18 @@ public class Yana extends Activity implements TextToSpeech.OnInitListener{
     	else{
     		tts_pref_false.setText("");}
     	
-    	Box_TTS_presence=preferences.getBoolean("TTS_presence", true);
+    	TTS_TEST=preferences.getBoolean("TTS_TEST", true);
     	Box_MAJ=preferences.getBoolean("maj", true);
+    	bienvenue=preferences.getBoolean("bienvenue", true);
     	
     	update=preferences.getBoolean("update", false);
     	
     	Token=preferences.getString("token", "");
+    	
+    	Nom=preferences.getString("name", ""); // Importe l'identité de la personne
+		Prénom=preferences.getString("surname", "");
+		Sexe=preferences.getString("sexe", "");
+		Pseudo=preferences.getString("nickname", "");
     		
     	ShakeService=new Intent(Yana.this, ShakeService.class); // Démarre le service en fonction de l'état de la box
     	boolean Box_shake=preferences.getBoolean("shake", true);
@@ -304,7 +360,8 @@ public class Yana extends Activity implements TextToSpeech.OnInitListener{
 			"Attention ! Votre sensibilité de Shake est trop basse donc elle a été réhaussée à 3.",
 			Toast.LENGTH_SHORT);
         	t.show();}
-		ShakeDetector.getConfig(Shake_sens);}
+		ShakeDetector.getConfig(Shake_sens);
+		Log.d("End of Config","");}
         
     void Initialisation(){ // Initialise le processus
         Intent intent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
@@ -425,7 +482,7 @@ public class Yana extends Activity implements TextToSpeech.OnInitListener{
 					toast.show();}
     	}
     	
-    	else if (Token.compareTo("")==0){ 
+    	else if (Token.compareTo("")==0 && !AI){ 
     		
     		Traitement.Commandes.clear();
     		Traitement.Liens.clear();
@@ -510,5 +567,27 @@ public class Yana extends Activity implements TextToSpeech.OnInitListener{
 		if(Box_TTS==true && Rep.length()<300){
 			mTts = new TextToSpeech(this, this);} // Lance la synthèse vocale si les options l'autorisent et si la réponse n'est pas trop longue
     }
+    
+    public String Random_String(){ // Choisit une chaine de caractères au hasard
+		ArrayList<String> list = new ArrayList<String>();
+		list.add("Bonjour !");
+		
+		if(AI){
+			if(Prénom.compareTo("")!=0){
+				list.add("Salut "+Prénom+" !");}
+			
+			if(Nom.compareTo("")!=0){
+				list.add("Sincères salutations, maître "+Nom+".");}
+			
+			if(Sexe.compareTo("")!=0){
+				list.add("Bonjour "+Sexe+" "+Nom+". Heureux de vous revoir.");}
+			
+			if(Pseudo.compareTo("")!=0){
+				list.add("Coucou mon petit "+Pseudo+". Heureux de te revoir !");}}
+		
+		int randomInt = random.nextInt(list.size());
+        String Retour = list.get(randomInt).toString();
+		
+		return Retour;}
 
 }
