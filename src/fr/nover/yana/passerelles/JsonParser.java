@@ -65,7 +65,7 @@ public class JsonParser extends DefaultHttpClient{
 			HttpResponse httpResponse = httpClient.execute(httpPost);
 			HttpEntity httpEntity = httpResponse.getEntity();
 			json = EntityUtils.toString(httpEntity).trim();;
-			Log.d("",json);} 
+			Log.d("Résultat sous forme de JSON",json);} 
 		
 		catch (UnsupportedEncodingException e) {
 			Log.d("","UnsupportedEncoding");

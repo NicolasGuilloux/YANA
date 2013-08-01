@@ -108,7 +108,6 @@ public class Yana extends Activity implements TextToSpeech.OnInitListener{
 	protected static final int OPTION = 2;
 	protected static final int TTS = 3;
 	
-	@SuppressLint("NewApi")
 	public void onCreate(Bundle savedInstanceState){
 	    super.onCreate(savedInstanceState);
 	    setContentView(R.layout.interface_yana); // Définit la layout a utiliser
@@ -572,7 +571,7 @@ public class Yana extends Activity implements TextToSpeech.OnInitListener{
 		ArrayList<String> list = new ArrayList<String>();
 		list.add("Bonjour !");
 		
-		if(AI){
+		if(!AI){
 			if(Prénom.compareTo("")!=0){
 				list.add("Salut "+Prénom+" !");}
 			
