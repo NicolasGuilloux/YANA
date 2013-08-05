@@ -18,8 +18,6 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
-import android.content.pm.PackageInfo;
-import android.content.pm.PackageManager.NameNotFoundException;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
@@ -49,11 +47,7 @@ import android.widget.Toast;
 import java.util.ArrayList;
 import java.util.Random;
 
-import org.json.JSONException;
-import org.json.JSONObject;
-
 import fr.nover.yana.assistant_installation.Assistant_Installation;
-import fr.nover.yana.passerelles.JsonParser;
 import fr.nover.yana.passerelles.Traitement;
 import fr.nover.yana.passerelles.ShakeDetector;
 
@@ -80,7 +74,7 @@ public class Yana extends Activity implements TextToSpeech.OnInitListener{
 	static boolean servstate=false;
 	boolean Box_TTS, Box_MAJ, Box_TTS_presence;
 	
-	String Token="",Version;
+	String Token="";
 	
 	SharedPreferences.Editor geted;
 	
@@ -179,58 +173,12 @@ public class Yana extends Activity implements TextToSpeech.OnInitListener{
 			 	   	    startActivityForResult(checkIntent, TTS);}
 		 	     })
 		 	     .show();}
-		    
-			try {
-				PackageInfo pInfo = getPackageManager().getPackageInfo(getPackageName(), 0);
-			    Version = pInfo.versionName;} 
-			catch (NameNotFoundException e1) {e1.printStackTrace();}
-		    
-		   if(!testMAJ && Box_MAJ){	// Vérifie la version d'Android
-			    JsonParser jParser = new JsonParser ();
-			 	try{
-			 		JSONObject json = jParser.getJSONFromUrl("http://projet.idleman.fr/yana/maj.php");
-			 		JSONObject maj = json.getJSONObject("maj");
-			 		JSONObject yana_android = maj.getJSONObject("yana-android");
-			 		String Version_dispo = yana_android.getString("version");
-			 		Log.d("","Version de l'application : "+Version+". Version disponible : "+Version_dispo);
-			 		
-				 	if(Version_dispo.compareTo(Version)!=0){
-				 	    
-				 		new AlertDialog.Builder(this)
-				 	    .setTitle("Une nouvelle version est disponible.")
-				 	    .setMessage("La version de votre application est "+Version+" alors que la version "+Version_dispo+" est disponible. Voulez vous faire la mise à jour maintenant ?")
-				 	    .setNegativeButton("Non", new DialogInterface.OnClickListener() {
-				 	        public void onClick(DialogInterface dialog, int which) { 
-				 	            // do nothing
-				 	        }
-				 	     })
-				 	    .setPositiveButton("Oui", new DialogInterface.OnClickListener() {
-				 	        public void onClick(DialogInterface dialog, int which) { 
-				 	        	Intent MAJ = new Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/Etsuni/YANA/raw/master/YANA.apk"));
-			        			startActivity(MAJ);}
-				 	     })
-				 	     .show();
-				 		testMAJ=true;
-				 }}
-			 	
-			 	catch(JSONException e){
-			 		Log.d("",""+e);
-			 		 Toast toast= Toast.makeText(getApplicationContext(),
-			 	     "Echec de la vérification de mise à jour.", 4000);  
-			 		 toast.show();}
-			 	
-			 	catch(Exception e){
-			 		Log.d("",""+e);
-			 		Toast toast= Toast.makeText(getApplicationContext(),
-					"Echec de la vérification de mise à jour.", 4000);  
-					toast.show();}}}
-	   
 
 	   	if(bienvenue && Box_TTS && !bienvenue_fait){
 	   		bienvenue_fait=true;
 	   		Rep = Random_String();
 	   		mTts = new TextToSpeech(this, this);}
-	}
+	}}
 	
 	public void onActivityResult(int requestCode, int resultCode, Intent data){ // S'exécute lors d'un retour d'activité
     switch (requestCode) {

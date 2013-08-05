@@ -11,7 +11,7 @@ public class get_config extends PreferenceActivity {
 
 	String [] testValues = {"Mademoiselle" , "Madame", "Monsieur"};
     public static String Nom, Prénom, Pseudonyme, IPAdress, IPadress_ext, SSID;
-    public static boolean TTS, ShakeService, Update_Com, MAJ, externe;
+    public static boolean TTS, ShakeService, Update_Com, externe;
     public static int Sexe;
     
     SharedPreferences.Editor geted;
@@ -36,7 +36,6 @@ public class get_config extends PreferenceActivity {
 		geted.putBoolean("shake", ShakeService);
 		geted.putBoolean("tts_pref", TTS);
 		geted.putBoolean("update", Update_Com);
-		geted.putBoolean("maj", MAJ);
     	geted.commit();
 	
 		ListPreference lp = (ListPreference) findPreference("sexe");

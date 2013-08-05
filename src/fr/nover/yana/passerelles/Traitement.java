@@ -120,9 +120,9 @@ public class Traitement {
 				Verification_erreur();
 				retour=false;}}
 	 	else{
-	 		Liens.add(1, "");
-			Confidences.add(1, "");
-	 		Commandes.add(1, "Echec du contact avec le serveur. Veuillez vérifier votre système et l'adresse entrée.");}
+	 		Liens.add("");
+			Confidences.add("");
+	 		Commandes.add("Echec du contact avec le serveur. Veuillez vérifier votre système et l'adresse entrée.");}
 	 	
 		Commandes.add(0, "YANA, cache-toi.");
 		Liens.add(0, "");

@@ -88,11 +88,6 @@
 					    android:summary="Cochez pour activer l'update des commandes au démarrage de l'application"
 					    android:defaultValue="False" />
 					<CheckBoxPreference
-					    android:key="maj"
-					    android:title="Vérification d'une mise à jour au démarrage"
-					    android:summary="Cochez pour activer la vérification d'une mise à jour au démarrage de l'application"
-					    android:defaultValue="True" />
-					<CheckBoxPreference
 					    android:key="bienvenue"
 					    android:title="Message de bienvenue au démarrage"
 					    android:summary="Cochez pour activer le message de bienvenue au démarrage"

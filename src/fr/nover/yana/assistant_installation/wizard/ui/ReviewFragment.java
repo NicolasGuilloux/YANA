@@ -217,10 +217,6 @@ public class ReviewFragment extends ListFragment implements ModelCallbacks {
 					get_config.TTS=true;}
 				else{get_config.TTS=false;}
 
-				if(value.contains("vérification")){
-					get_config.MAJ=true;}
-				else{get_config.MAJ=false;}
-
 				if(value.contains("commandes")){
 					get_config.Update_Com=true;}
 				else{get_config.Update_Com=false;}}
