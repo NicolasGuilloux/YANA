@@ -1,11 +1,10 @@
-Recherche de dons
-====
+Bonjour internautes,
 
-Bonjour les internautes, 
-je recherche des dons pour acquérir la somme de 25$. Ce n'est pas sans raison : cela servira à mettre l'application Yana for Android sur Google Play.
-Je m'en remets donc à vous. Vous pouvez faire vos dons à cette adresse : https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=XJ738T6VAPJB8 .
-Si jamais j'ai trop de dons (ça peut arriver x')), je reverserais tout à Idleman.
-En vous remerciant de me soutenir,
+je suis vraiment ému car un donateur m'a fait don de 20€, pile la somme qu'il fallait pour pouvoir mettre l'application sur Google Play.
+Je vous remercie vraiment de cette attention et me donne vraiment l'envie de faire plus pour vous :)
+
+Encore merci !
+
 Nover
 
 
