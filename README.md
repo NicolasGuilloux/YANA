@@ -1,3 +1,13 @@
+Bonjour internautes,
+
+je suis vraiment ému car un donateur m'a fait don de 20€, pile la somme qu'il fallait pour pouvoir mettre l'application sur Google Play.
+Je vous remercie vraiment de cette attention et me donne vraiment l'envie de faire plus pour vous :)
+
+Encore merci !
+
+Nover
+
+
 YANA for Android
 ====
 
