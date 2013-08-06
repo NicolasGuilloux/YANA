@@ -24,7 +24,7 @@
     <string name="label_your_nickname">Pseudonyme</string>
     <string name="hint_your_name">Exemple : Akalipovitch</string>
     <string name="hint_your_surname">Exemple : Bernard</string>
-    <string name="hint_your_nickname">Exemple : Idlever</string>
+    <string name="hint_your_nickname">Mettez le en phonétique</string>
     
     <string name="ipadress_int">Lien interne</string>
     <string name="SSID">Nom du réseau local</string>

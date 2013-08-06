@@ -7,8 +7,7 @@
 
 package fr.nover.yana;
 
-import android.annotation.SuppressLint;
-import android.annotation.TargetApi;
+
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.ActivityNotFoundException;
@@ -21,7 +20,6 @@ import android.content.SharedPreferences;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
-import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.StrictMode;
@@ -45,14 +43,13 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import java.util.ArrayList;
+import java.util.Locale;
 import java.util.Random;
 
 import fr.nover.yana.assistant_installation.Assistant_Installation;
 import fr.nover.yana.passerelles.Traitement;
 import fr.nover.yana.passerelles.ShakeDetector;
 
-@TargetApi(Build.VERSION_CODES.GINGERBREAD)
-@SuppressLint("NewApi")
 public class Yana extends Activity implements TextToSpeech.OnInitListener{
 	
 	static EditText IPadress; // Affiche et stocke l'adresse IP
@@ -72,7 +69,7 @@ public class Yana extends Activity implements TextToSpeech.OnInitListener{
     	// A propos du Service (Intent pour le lancer et servstate pour savoir l'état du service)
 	private Intent ShakeService;
 	static boolean servstate=false;
-	boolean Box_TTS, Box_MAJ, Box_TTS_presence;
+	boolean Box_TTS, Box_TTS_presence;
 	
 	String Token="";
 	
@@ -154,30 +151,10 @@ public class Yana extends Activity implements TextToSpeech.OnInitListener{
     		startActivityForResult(SetupWizard, OPTION);}
 	    
     	else{
-    		if(TTS_TEST){
-    	
-		    	new AlertDialog.Builder(this)
-		 	    .setTitle("Vérification du TTS")
-		 	    .setMessage("Voulez-vous tester votre TTS afin de savoir s'il est bien fonctionnel ? Attention : Ce test n'est proposé qu'au premier démarrage. Il est conseillé de dire Oui. Si l'écran devient noir et l'application crash, vous devriez vérifier manuellement l'application.")
-		 	    .setNegativeButton("Non", new DialogInterface.OnClickListener() {
-		 	        public void onClick(DialogInterface dialog, int which) {
-	            		geted.putBoolean("TTS_TEST", false);
-	            		geted.commit();
-		 	        }
-		 	     })
-		 	    .setPositiveButton("Oui", new DialogInterface.OnClickListener() {
-		 	        public void onClick(DialogInterface dialog, int which) { 
-		 	        // Vérifie la présence du TTS. S'il n'y en a pas, il propose une installation
-			 	       	Intent checkIntent = new Intent();
-			 	   	    checkIntent.setAction(TextToSpeech.Engine.ACTION_CHECK_TTS_DATA);
-			 	   	    startActivityForResult(checkIntent, TTS);}
-		 	     })
-		 	     .show();}
-
-	   	if(bienvenue && Box_TTS && !bienvenue_fait){
-	   		bienvenue_fait=true;
-	   		Rep = Random_String();
-	   		mTts = new TextToSpeech(this, this);}
+		   	if(bienvenue && Box_TTS && !bienvenue_fait){
+		   		bienvenue_fait=true;
+		   		Rep = Random_String();
+		   		mTts = new TextToSpeech(this, this);}
 	}}
 	
 	public void onActivityResult(int requestCode, int resultCode, Intent data){ // S'exécute lors d'un retour d'activité
@@ -198,16 +175,16 @@ public class Yana extends Activity implements TextToSpeech.OnInitListener{
 				Prétraitement(Ordre, URL); // Envoie en Prétraitement
 				break;}}
 		
-		case OPTION: { // Dès un retour de la configuration, il la recharge
+		case OPTION: // Dès un retour de la configuration, il la recharge
 			getConfig();
-			break;} 
-		case TTS:{
-    		geted.putBoolean("TTS_TEST", false);
-    		geted.commit();
-			if (resultCode != TextToSpeech.Engine.CHECK_VOICE_DATA_PASS) {
+			break;
+	}}
+
+	public void onInit(int i){ // S'exécute dès la création du mTts
+			if(mTts.isLanguageAvailable(Locale.FRENCH)!=TextToSpeech.LANG_AVAILABLE && !testTTS){
 				new AlertDialog.Builder(this)
-		 	    .setTitle("Il n'y a pas un TTS utilisable")
-		 	    .setMessage("Android ne détecte aucun dispositif de Synthèse Vocale (TTS). Voulez vous installer un programme de Synthèse Vocale (sinon l'application ne sera pas entièrement fonctionnelle) ?")
+		 	    .setTitle("Le TTS n'est pas en Français.")
+		 	    .setMessage("Android détecte que votre dispositif de Synthèse Vocale ne dispose pas du Français dans ses langues. Voulez-vous installer le Français ? Appuyez sur Non pour continuer quand même.")
 		 	    .setNegativeButton("Non", new DialogInterface.OnClickListener() {
 		 	        public void onClick(DialogInterface dialog, int which) { 
 		 	            testTTS=true;}
@@ -219,18 +196,11 @@ public class Yana extends Activity implements TextToSpeech.OnInitListener{
 			            startActivity(installIntent);}
 		 	     })
 		 	    .show();}
-			else if (TTS_TEST){
+			else{
 				testTTS=true;
-				Toast t = Toast.makeText(getApplicationContext(),
-						"Votre TTS semble normal :)",
-						Toast.LENGTH_SHORT);
-			        	t.show();}}
-			break;
-	}}
-
-	public void onInit(int i){ // S'exécute dès la création du mTts
-	    mTts.speak(Rep,TextToSpeech.QUEUE_FLUSH,null);
-	    Rep="";} // Au cas où Rep reste le même à la prochaine déclaration du TTS
+				mTts.setLanguage(Locale.FRENCH);
+			    mTts.speak(Rep,TextToSpeech.QUEUE_FLUSH,null);
+			    Rep="";}} // Au cas où Rep reste le même à la prochaine déclaration du TTS
 
 	public void onDestroy(){ // Quitte le TTS quand l'application se termine
 	    if (mTts != null){
@@ -273,8 +243,6 @@ public class Yana extends Activity implements TextToSpeech.OnInitListener{
     	else{
     		tts_pref_false.setText("");}
     	
-    	TTS_TEST=preferences.getBoolean("TTS_TEST", true);
-    	Box_MAJ=preferences.getBoolean("maj", true);
     	bienvenue=preferences.getBoolean("bienvenue", true);
     	
     	update=preferences.getBoolean("update", false);
