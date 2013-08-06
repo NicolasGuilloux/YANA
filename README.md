@@ -27,5 +27,5 @@ Remerciements
 
 Merci à Idleman qui m'a permis de bidouiller chez moi un système domotique et de m'avoir aidé à bricoler cette application permettant d'exploiter ce système.
 
-Merci aussi au donnateur qui m'a fait don de 20€ pour pouvoir mettre l'application sur Google Play. 
+Merci aussi au donateur qui m'a fait don de 20€ pour pouvoir mettre l'application sur Google Play. Vous pouvez remercier maditnerd :D
 
