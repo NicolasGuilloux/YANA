@@ -30,7 +30,8 @@ public class Traitement {
 	
  	private static final String TAG=""; // Logger tag
  	public static double Voice_Sens; // Sensibilité de la comparaison entre ordres et commandes
- 	static public String URL="";
+ 	static public String URL="", XBMC;
+ 	static public boolean XBMC_passe=false;
  	
  		// Déclare les ArraList utilisées pour stocker les éléments de commandes
  	public static ArrayList<String> Commandes = new ArrayList<String>();
@@ -56,11 +57,11 @@ public class Traitement {
 		return n;} // Retourne le résultat
 	
 	public static String HTTP_Contact(String URL){
-		Log.d(TAG,"Echange avec le serveur");
+		Log.d("Echange avec le serveur",""+URL);
 	    
 	    	JsonParser jParser = new JsonParser ();
 	    try{json = jParser.getJSONFromUrl(URL);}
-	    catch(Exception e){}
+	    catch(Exception e){Log.d("Echec du contact","Le server n'a pas pu être contacté");}
 	    	
 	    try{JSONArray commands = json.getJSONArray("responses");
 			JSONObject Rep = commands.getJSONObject(0); // Importe la première valeur
@@ -103,6 +104,8 @@ public class Traitement {
 					Command = Command.replace("&#039;", "'");
 					Command = Command.replace("eteint", "éteint");
 					String URL = emp.getString("url");
+					URL = URL.replace("{", "%7B");
+        			URL = URL.replace("}", "%7D");
 					StringTokenizer tokens = new StringTokenizer(URL, "?");
 					tokens.nextToken();
 					URL = tokens.nextToken();

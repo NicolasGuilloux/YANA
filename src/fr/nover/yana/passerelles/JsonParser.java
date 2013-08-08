@@ -42,9 +42,11 @@ public class JsonParser extends DefaultHttpClient {
 			HttpGet httpGet = new HttpGet(URL);
 			HttpResponse httpResponse = httpClient.execute(httpGet);
 			HttpEntity httpEntity = httpResponse.getEntity();
-			json = EntityUtils.toString(httpEntity).trim();;
-			Log.d("Résultat sous forme de JSON",json);} 
-		
+			json = EntityUtils.toString(httpEntity).trim();
+			if(json.compareTo("")==0){ // Met un emplacement vide en esquivant le JSONException
+				json="{\"responses\":[{\"type\":\"talk\",\"sentence\":\"\"}]}";}
+			Log.d("Résultat sous forme de JSON"," "+json);
+		}
 		catch (UnsupportedEncodingException e) {
 			Log.d("","UnsupportedEncoding");
 			e.printStackTrace();Traitement.retour=false;} 
@@ -55,7 +57,7 @@ public class JsonParser extends DefaultHttpClient {
 			Log.d("","IOException");
 			e.printStackTrace();Traitement.retour=false;}
 		catch (Exception e) {
-			Log.d("","IOException");
+			Log.d("","Exception");
 			e.printStackTrace();Traitement.retour=false;}
 	
 		// convertir le résultat qui est sous format d'un String en un JSONObject

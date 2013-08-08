@@ -1,7 +1,5 @@
 package fr.nover.yana.passerelles;
 
-import android.annotation.SuppressLint;
-
 public class LevenshteinDistance { 
 	
 	public static double similarity(String s1, String s2) { 
@@ -14,8 +12,7 @@ public class LevenshteinDistance {
 		if (bigLen == 0) { 
 			return 1.0; /* both strings are zero length */ } 
 		return (bigLen - computeEditDistance(s1, s2)) / (double) bigLen; }
-	
-	@SuppressLint("DefaultLocale")
+
 	public static int computeEditDistance(String s1, String s2) { 
 		s1 = s1.toLowerCase(); 
 		s2 = s2.toLowerCase(); 

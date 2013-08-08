@@ -44,7 +44,6 @@ import android.widget.Toast;
 import java.util.ArrayList;
 import java.util.Locale;
 import java.util.Random;
-
 import fr.nover.yana.assistant_installation.Assistant_Installation;
 import fr.nover.yana.passerelles.Traitement;
 import fr.nover.yana.passerelles.ShakeDetector;
@@ -448,7 +447,6 @@ public class Yana extends Activity implements TextToSpeech.OnInitListener{
 
 		@Override
 		public void run() {
-			// TODO Auto-generated method stub
 			Prétraitement2(Ordre,URL);
 		}}, 250);
     }  
@@ -474,19 +472,20 @@ public class Yana extends Activity implements TextToSpeech.OnInitListener{
             NetworkInfo activeNetwork = cm.getActiveNetworkInfo();
         	
         	if(activeNetwork!=null){ // Vérifie le réseau
-        		Rep = Traitement.HTTP_Contact("http://"+IPadress.getText().toString()+"?"+URL+"&token="+Token);} // Envoie au RPi et enregistre sa réponse
+        		Log.d("Ordre",""+Ordre);
+        			Rep = Traitement.HTTP_Contact("http://"+IPadress.getText().toString()+"?"+URL+"&token="+Token);} // Envoie au RPi et enregistre sa réponse
         	else{
         		Toast toast= Toast.makeText(getApplicationContext(), // En cas d'échec, il prévient l'utilisateur
     			    	"Vous n'avez pas de connexion internet !", 4000);  
     					toast.setGravity(Gravity.TOP|Gravity.CENTER_HORIZONTAL, 0, 80);
     					toast.show();}
         }
-		
-		conversation(Rep, "reponse");
-		
-		if(Box_TTS==true && Rep.length()<300){
-			mTts = new TextToSpeech(this, this);} // Lance la synthèse vocale si les options l'autorisent et si la réponse n'est pas trop longue
-    }
+		if(Rep.compareTo("")!=0){
+			conversation(Rep, "reponse");
+			
+			if(Box_TTS==true && Rep.length()<300){
+				mTts = new TextToSpeech(this, this);} // Lance la synthèse vocale si les options l'autorisent et si la réponse n'est pas trop longue
+    }}
     
     public String Random_String(){ // Choisit une chaine de caractères au hasard
 		ArrayList<String> list = new ArrayList<String>();

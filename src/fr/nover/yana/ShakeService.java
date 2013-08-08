@@ -107,7 +107,6 @@ public class ShakeService extends Service implements TextToSpeech.OnInitListener
             		getTTS();}
         }});
         
-
 		STT = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
 		STT.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL,RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
 		STT.putExtra(RecognizerIntent.EXTRA_CALLING_PACKAGE,"fr.nover.yana");
@@ -157,7 +156,7 @@ public class ShakeService extends Service implements TextToSpeech.OnInitListener
 				public void run() {
 					// TODO Auto-generated method stub
 					startVoiceRecognitionCycle();
-				}}, 250);}
+				}}, 500);}
 		else{fin();} // Sinon il remet tout à 0
 	}
 	
@@ -281,9 +280,10 @@ public class ShakeService extends Service implements TextToSpeech.OnInitListener
 		
 		while(A_dire==""){android.os.SystemClock.sleep(1000);} // Attend que A_dire soit bien remplie
 		
-		NewRep.putExtra("contenu", A_dire); // Envoie de la réponse à l'interface
-	 	LocalBroadcastManager.getInstance(this).sendBroadcast(NewRep);
-
+		if(A_dire.compareTo("")!=0){
+			NewRep.putExtra("contenu", A_dire); // Envoie de la réponse à l'interface
+		 	LocalBroadcastManager.getInstance(this).sendBroadcast(NewRep);}
+		else{A_dire=" ";}
 		getTTS();} // Dicte la réponse
 
 	public void onRmsChanged(float rmsdB) {}
