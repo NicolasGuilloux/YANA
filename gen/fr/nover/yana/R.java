@@ -19,14 +19,15 @@ or to a theme attribute in the form "<code>?[<i>package</i>:][<i>type</i>:]<i>na
         public static final int textAppearanceFinish=0x7f010000;
     }
     public static final class color {
+        public static final int click=0x7f050004;
         public static final int envoi=0x7f050000;
         public static final int recu=0x7f050001;
-        public static final int review_green=0x7f050008;
-        public static final int step_pager_next_tab_color=0x7f050007;
-        public static final int step_pager_previous_tab_color=0x7f050004;
-        public static final int step_pager_selected_last_tab_color=0x7f050006;
-        public static final int step_pager_selected_tab_color=0x7f050005;
-        public static final int text_light=0x7f050009;
+        public static final int review_green=0x7f050009;
+        public static final int step_pager_next_tab_color=0x7f050008;
+        public static final int step_pager_previous_tab_color=0x7f050005;
+        public static final int step_pager_selected_last_tab_color=0x7f050007;
+        public static final int step_pager_selected_tab_color=0x7f050006;
+        public static final int text_light=0x7f05000a;
         public static final int theme=0x7f050002;
         public static final int theme_icon=0x7f050003;
     }
@@ -47,9 +48,10 @@ or to a theme attribute in the form "<code>?[<i>package</i>:][<i>type</i>:]<i>na
         public static final int ip_adress=0x7f020004;
         public static final int item_focused=0x7f020005;
         public static final int item_pressed=0x7f020006;
-        public static final int linearborder=0x7f020007;
-        public static final int reponse=0x7f020008;
-        public static final int selectable_item_background=0x7f020009;
+        public static final int layout_selector=0x7f020007;
+        public static final int linearborder=0x7f020008;
+        public static final int reponse=0x7f020009;
+        public static final int selectable_item_background=0x7f02000a;
     }
     public static final class id {
         public static final int Btnconfiguration=0x7f0b001a;

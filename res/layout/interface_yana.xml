@@ -53,8 +53,7 @@
 		        android:layout_width="wrap_content"
 		        android:layout_height="wrap_content"
 		        android:layout_above="@+id/btnRec"
-		        android:layout_centerHorizontal="true"
-		        android:textIsSelectable="true" />
+		        android:layout_centerHorizontal="true" />
 
 		    <ImageButton
 		        android:id="@+id/btnRec"
@@ -81,7 +80,10 @@
 			        android:layout_height="40dip"
 			        android:background="@color/theme"
 			        android:radius="4dp"
-			        android:gravity="center" >
+			        android:gravity="center"
+			        android:focusable="true"
+			        android:clickable="true"
+			        android:drawable="@drawable/layout_selector" >
 			        
 			        <TextView
 			            android:gravity="center"
@@ -101,7 +103,8 @@
 			            android:id="@+id/commandes_layout"
 			            android:layout_width="fill_parent"
 			            android:layout_height="wrap_content"
-			            android:background="#fff" />
+			            android:background="#fff"
+			       		android:clickable="true" />
 		        	
 		        </ScrollView>
 		        

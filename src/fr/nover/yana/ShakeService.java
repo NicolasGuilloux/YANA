@@ -7,8 +7,6 @@
 
 package fr.nover.yana;
 
-import android.annotation.SuppressLint;
-import android.annotation.TargetApi;
 import android.app.Service;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -17,12 +15,14 @@ import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.hardware.Sensor;
 import android.hardware.SensorManager;
+import android.media.AudioManager;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
-import android.os.Build;
+import android.os.Handler;
 import android.os.IBinder;
 import android.os.Looper;
 import android.speech.tts.TextToSpeech;
+import android.speech.tts.TextToSpeech.OnUtteranceCompletedListener;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.speech.RecognitionListener;
@@ -34,6 +34,7 @@ import android.view.Gravity;
 import android.widget.Toast;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Random;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -43,8 +44,7 @@ import fr.nover.yana.passerelles.ScreenReceiver;
 import fr.nover.yana.passerelles.ShakeDetector;
 import fr.nover.yana.passerelles.ShakeDetector.OnShakeListener;
 
-@SuppressLint({ "NewApi", "ShowToast" })
-public class ShakeService extends Service implements TextToSpeech.OnInitListener, RecognitionListener{
+public class ShakeService extends Service implements TextToSpeech.OnInitListener, RecognitionListener, OnUtteranceCompletedListener{
 
 	private ShakeDetector mShakeDetector; // Pour la détection du "shake"
     private SensorManager mSensorManager;
@@ -59,6 +59,9 @@ public class ShakeService extends Service implements TextToSpeech.OnInitListener
     
     Boolean last_init=false, last_shake=false; // Déclare les variables pour éviter les doublons d'initialisation et Shake
     
+    Intent STT;
+	Handler myHandler = new Handler();
+    
 		// Logger tag
  	private static final String TAG="";
  		// Déclare le SpeechRecognizer
@@ -72,6 +75,8 @@ public class ShakeService extends Service implements TextToSpeech.OnInitListener
  	
  		// Valeur de retour de la Comparaison
  	int n=-1;
+ 	
+ 	final BroadcastReceiver mReceiver = new ScreenReceiver();
      
  		// Timer task used to reproduce the timeout input error that seems not be called on android 4.1.2
 	public class SilenceTimer extends TimerTask {
@@ -102,9 +107,14 @@ public class ShakeService extends Service implements TextToSpeech.OnInitListener
             		getTTS();}
         }});
         
+
+		STT = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
+		STT.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL,RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
+		STT.putExtra(RecognizerIntent.EXTRA_CALLING_PACKAGE,"fr.nover.yana");
+        STT.putExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS, true);
+        
         final IntentFilter filter = new IntentFilter(Intent.ACTION_SCREEN_ON); // Pour le contact avec l'interface de Yana
         filter.addAction(Intent.ACTION_SCREEN_OFF);
-        final BroadcastReceiver mReceiver = new ScreenReceiver();
         registerReceiver(mReceiver, filter);
         
         fin();}
@@ -112,6 +122,7 @@ public class ShakeService extends Service implements TextToSpeech.OnInitListener
     public void onDestroy() { // En cas d'arrêt du service
         super.onDestroy();
         Yana.ServiceState(false); // Définit l'état du service (éteint)
+        unregisterReceiver(mReceiver);
         mShakeDetector.setOnShakeListener(new OnShakeListener(){ // Arrête le Shake
             @Override
             public void onShake(int count) {
@@ -130,36 +141,41 @@ public class ShakeService extends Service implements TextToSpeech.OnInitListener
 		t.show();
 		
 		if(TTS_Box){ // Si on autorise le TTS
-			mTts.speak(A_dire,TextToSpeech.QUEUE_FLUSH, null); // Il dicte sa phrase
-		if(!last_init){ // Si il n'a pas déjà initialisé le processus de reconnaissance vocale
-			android.os.SystemClock.sleep(1000);
-			startVoiceRecognitionCycle();} // Il l'effectue au bout d'une seconde
-		else{fin();}} // Sinon il remet tout à 0
+			mTts.setOnUtteranceCompletedListener(this);
+			HashMap<String, String> myHashAlarm = new HashMap<String, String>();
+            myHashAlarm.put(TextToSpeech.Engine.KEY_PARAM_STREAM, String.valueOf(AudioManager.STREAM_ALARM));
+            myHashAlarm.put(TextToSpeech.Engine.KEY_PARAM_UTTERANCE_ID, "Enonciation terminée");
+			mTts.speak(A_dire,TextToSpeech.QUEUE_FLUSH, myHashAlarm);} // Il dicte sa phrase
 		}
+
+	@Override
+	public void onUtteranceCompleted(String utteranceId) {
+		if(!last_init){ // Si il n'a pas déjà initialisé le processus de reconnaissance vocale
+			myHandler.postDelayed(new Runnable(){
+
+				@Override
+				public void run() {
+					// TODO Auto-generated method stub
+					startVoiceRecognitionCycle();
+				}}, 250);}
+		else{fin();} // Sinon il remet tout à 0
+	}
 	
 	public void getTTS(){mTts = new TextToSpeech(this, this);} // Initialise le TTS
 
 	public IBinder onBind(Intent arg0) {return null;}
 	
-	@TargetApi(Build.VERSION_CODES.FROYO)
-	@SuppressLint("NewApi")
 	private SpeechRecognizer getSpeechRevognizer(){ // Configure la reconnaissance vocale
 		if (speech == null) {
 			speech = SpeechRecognizer.createSpeechRecognizer(getApplicationContext());
 			speech.setRecognitionListener(this);}
 		return speech;}
 
-	@TargetApi(Build.VERSION_CODES.FROYO)
-	@SuppressLint("NewApi")
 	public void startVoiceRecognitionCycle(){ // Démarre le cycle de reconnaissance vocale
 		last_init=true;
-		Intent intent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
-		intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL,RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
-		intent.putExtra(RecognizerIntent.EXTRA_CALLING_PACKAGE,"fr.nover.yana");
-        intent.putExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS, true);
-		getSpeechRevognizer().startListening(intent);}
+		getSpeechRevognizer().startListening(STT);}
 
-	public void stopVoiceRecognition(){ // Arrête le cicle de reconnaissance vocale
+	public void stopVoiceRecognition(){ // Arrête le cycle de reconnaissance vocale
 		speechTimeout.cancel();
 		fin();}
 
@@ -274,7 +290,6 @@ public class ShakeService extends Service implements TextToSpeech.OnInitListener
 
 	public void onPartialResults(Bundle arg0) {}
     		
-	@SuppressLint("NewApi")
 	public String Random_String(){ // Choisit une chaine de caractères au hasard
 		ArrayList<String> list = new ArrayList<String>();
 		list.add("Comment puis-je vous aider, boss ?");
@@ -321,11 +336,8 @@ public class ShakeService extends Service implements TextToSpeech.OnInitListener
 			speech.cancel();
 			speech.destroy();
 			speech = null;}
+		last_shake=last_init=false;
 		if(n==0){ // Si "Yana, cache-toi"
-			android.os.SystemClock.sleep(7000); // Attend bien la fin de l'énonciation avant de quitter l'appli
-			last_shake=last_init=false;
 			this.stopSelf();}
-		else{last_shake=last_init=false;} // Sinon...
-		}
-	
+		}	
 }

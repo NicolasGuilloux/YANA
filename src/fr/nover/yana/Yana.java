@@ -7,7 +7,6 @@
 
 package fr.nover.yana;
 
-
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.ActivityNotFoundException;
@@ -199,7 +198,8 @@ public class Yana extends Activity implements TextToSpeech.OnInitListener{
 			else{
 				testTTS=true;
 				mTts.setLanguage(Locale.FRENCH);
-			    mTts.speak(Rep,TextToSpeech.QUEUE_FLUSH,null);
+				
+				mTts.speak(Rep,TextToSpeech.QUEUE_FLUSH, null); // Il dicte sa phrase
 			    Rep="";}} // Au cas où Rep reste le même à la prochaine déclaration du TTS
 
 	public void onDestroy(){ // Quitte le TTS quand l'application se termine
@@ -354,6 +354,8 @@ public class Yana extends Activity implements TextToSpeech.OnInitListener{
 	        TextView Commande_TV = new TextView(this);
 	        Commande_TV.setText(Commande);
 	        Commande_TV.setId(1000+i);
+	        Commande_TV.setClickable(true);
+	        Commande_TV.setFocusable(true);
 	        
 	        RelativeLayout.LayoutParams params = new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.WRAP_CONTENT, RelativeLayout.LayoutParams.WRAP_CONTENT); // Importation des parametres (en dessous du précédent)
 	        	
@@ -368,7 +370,10 @@ public class Yana extends Activity implements TextToSpeech.OnInitListener{
 	        
 	        Commande_TV.setOnClickListener(new View.OnClickListener() {
 	    		public void onClick(View v){
-	        		Prétraitement(Traitement.Commandes.get(v.getId()-1000), Traitement.Liens.get(v.getId()-1000));}});
+	    	
+	    		View TextView_C = findViewById(v.getId());
+	    		TextView_C.setBackgroundResource(R.drawable.layout_selector);
+	        	Prétraitement(Traitement.Commandes.get(v.getId()-1000), Traitement.Liens.get(v.getId()-1000));}});
 	    	m=m+1;}}
 
     void Commandes_actu(){ // Ici on va actualiser la liste des commandes
@@ -504,5 +509,6 @@ public class Yana extends Activity implements TextToSpeech.OnInitListener{
         String Retour = list.get(randomInt).toString();
 		
 		return Retour;}
+
 
 }

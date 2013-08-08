@@ -22,6 +22,7 @@ import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
 import android.preference.PreferenceManager;
 import android.util.Log;
+import android.widget.Toast;
 
 public class Traitement {
 	
@@ -99,8 +100,8 @@ public class Traitement {
 				for(int i = 0; i < commands.length(); i++) {
 					JSONObject emp = commands.getJSONObject(i);
 					String Command=emp.getString("command");
-					if(Command.contains("&#039;")){
-						Command = Command.replace("&#039;", "'");}
+					Command = Command.replace("&#039;", "'");
+					Command = Command.replace("eteint", "éteint");
 					String URL = emp.getString("url");
 					StringTokenizer tokens = new StringTokenizer(URL, "?");
 					tokens.nextToken();
@@ -150,27 +151,27 @@ public class Traitement {
 	}
 
 	public static boolean Verif_Reseau(Context context){ // Vérifie le réseau local
-		WifiManager wifiManager = (WifiManager) context.getSystemService(Context.WIFI_SERVICE);
-		   WifiInfo wifiInfo = wifiManager.getConnectionInfo();
-		   ConnectivityManager connec = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
-		   android.net.NetworkInfo wifi = connec.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
-		   String SSID_wifi=wifiInfo.getSSID();
-		   if(SSID_wifi!=null && SSID_wifi.contains("\"")){
+		try{WifiManager wifiManager = (WifiManager) context.getSystemService(Context.WIFI_SERVICE);
+		    WifiInfo wifiInfo = wifiManager.getConnectionInfo();
+		    ConnectivityManager connec = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
+		    android.net.NetworkInfo wifi = connec.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
+		    String SSID_wifi=wifiInfo.getSSID();
+		    if(SSID_wifi!=null && SSID_wifi.contains("\"")){
 			   SSID_wifi = SSID_wifi.replaceAll("\"", "");}
-		   Log.d("SSID",SSID_wifi);
-		   SharedPreferences preferences= PreferenceManager.getDefaultSharedPreferences(context);
-		   String SSID_local=preferences.getString("SSID", "");
-		   Log.d("SSID demandée",SSID_local);
-		   if(wifi.isConnected()){
-			   if(SSID_wifi.compareTo(SSID_local)==0 || SSID_local.compareTo("")==0){
+		    Log.d("SSID","SSID actuelle : "+SSID_wifi);
+		   
+		    SharedPreferences preferences= PreferenceManager.getDefaultSharedPreferences(context);
+		    String SSID_local=preferences.getString("SSID", "");
+		    Log.d("SSID demandée","SSID enregistré : "+SSID_local);
+		    if(wifi.isConnected()){
+		 	   if(SSID_wifi.compareTo(SSID_local)==0 || SSID_local.compareTo("")==0){
 				   Log.d("Local","true");
-				   return true;}
-		   else{
-			   Log.d("Local","false");
-			   return false;}}
-		   else{
-			   Log.d("Local","false");
-			   return false;}
+				   return true;}}}
+		catch(Exception e){
+			Toast toast= Toast.makeText(context,
+    			"Echec de la vérification du réseau. Mise en local par défaut", Toast.LENGTH_SHORT);  
+    			toast.show();}
+		return false;
 	}
 	
 }
