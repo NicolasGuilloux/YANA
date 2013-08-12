@@ -25,8 +25,6 @@ import android.speech.tts.TextToSpeech;
 import android.speech.tts.TextToSpeech.OnUtteranceCompletedListener;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
-import android.speech.RecognitionListener;
-import android.speech.RecognizerIntent;
 import android.speech.SpeechRecognizer;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
@@ -36,22 +34,25 @@ import android.widget.Toast;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Random;
-import java.util.Timer;
-import java.util.TimerTask;
 
+import fr.nover.yana.passerelles.SpeechRecognizerWrapper.RecognizerFinishedCallback;
+import fr.nover.yana.passerelles.SpeechRecognizerWrapper.RecognizerState;
 import fr.nover.yana.passerelles.Traitement;
 import fr.nover.yana.passerelles.ScreenReceiver;
 import fr.nover.yana.passerelles.ShakeDetector;
 import fr.nover.yana.passerelles.ShakeDetector.OnShakeListener;
+import fr.nover.yana.passerelles.SpeechRecognizerWrapper;
 
-public class ShakeService extends Service implements TextToSpeech.OnInitListener, RecognitionListener, OnUtteranceCompletedListener{
+public class ShakeService extends Service implements TextToSpeech.OnInitListener, OnUtteranceCompletedListener, RecognizerFinishedCallback{
 
 	private ShakeDetector mShakeDetector; // Pour la détection du "shake"
     private SensorManager mSensorManager;
     private Sensor mAccelerometer;
+    private SpeechRecognizerWrapper mSpeechRecognizerWrapper;
     
     private TextToSpeech mTts; // Déclare le TTS
     boolean TTS_Box; // Permet de savoir si le TTS est autorisé
+	boolean Speech_continu;
     Random random = new Random(); // Pour un message aléatoire
     String Nom, Prénom, Sexe, Pseudo; // Pour l'identité de l'utilisateur
     
@@ -66,32 +67,22 @@ public class ShakeService extends Service implements TextToSpeech.OnInitListener
  	private static final String TAG="";
  		// Déclare le SpeechRecognizer
  	private static SpeechRecognizer speech = null;
- 		// Temps avant arrêt de la reconnaissance
- 	private Timer speechTimeout = null;
  	
  		// Déclare les contacts avec l'activité Yana
  	Intent NewRecrep = new Intent("NewRecrep"); 
  	Intent NewRep = new Intent("NewRep");
+ 	Intent Post_speech = new Intent("Post_speech");
+ 	Context context;
  	
  		// Valeur de retour de la Comparaison
  	int n=-1;
  	
  	final BroadcastReceiver mReceiver = new ScreenReceiver();
-     
- 		// Timer task used to reproduce the timeout input error that seems not be called on android 4.1.2
-	public class SilenceTimer extends TimerTask {
-		@Override
-		public void run() {
-        	Looper.prepare();
-        	fin();
-    		speechTimeout.cancel();
-			onError(SpeechRecognizer.ERROR_SPEECH_TIMEOUT);}
-	}
 	
 	public void onCreate(){
     	super.onCreate();
     	
-    	Yana.ServiceState(true); // Définit l'état du service pour Yana
+    	Yana.servstate=true; // Définit l'état du service pour Yana
         
     	mSensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE); // Définit tous les attributs du Shake
         mAccelerometer = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
@@ -107,20 +98,25 @@ public class ShakeService extends Service implements TextToSpeech.OnInitListener
             		getTTS();}
         }});
         
-		STT = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
-		STT.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL,RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
-		STT.putExtra(RecognizerIntent.EXTRA_CALLING_PACKAGE,"fr.nover.yana");
-        STT.putExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS, true);
+        mSpeechRecognizerWrapper = new SpeechRecognizerWrapper(getApplicationContext());
+        mSpeechRecognizerWrapper.addRecognizerFinishedCallback(this);
         
         final IntentFilter filter = new IntentFilter(Intent.ACTION_SCREEN_ON); // Pour le contact avec l'interface de Yana
         filter.addAction(Intent.ACTION_SCREEN_OFF);
         registerReceiver(mReceiver, filter);
         
-        fin();}
+        context=this;
+        mSpeechRecognizerWrapper.Broad(this);
+        
+        fin();
+        if(Looper.myLooper() == Looper.getMainLooper()){Log.d("Looper","true");}
+        SharedPreferences preferences= PreferenceManager.getDefaultSharedPreferences(this);
+		Speech_continu=preferences.getBoolean("continu", false);
+		Log.d("Speech_continu","Speech_continu : "+Speech_continu);}
 
     public void onDestroy() { // En cas d'arrêt du service
         super.onDestroy();
-        Yana.ServiceState(false); // Définit l'état du service (éteint)
+        Yana.servstate=false; // Définit l'état du service (éteint)
         unregisterReceiver(mReceiver);
         mShakeDetector.setOnShakeListener(new OnShakeListener(){ // Arrête le Shake
             @Override
@@ -131,8 +127,7 @@ public class ShakeService extends Service implements TextToSpeech.OnInitListener
         if (mTts != null){ // Arrête de TTS
         	mTts.stop();
             mTts.shutdown();}
-	    fin();
-    }
+	    fin();}
     
 	public void onInit(int status) { // En cas d'initialisation (après avoir initialisé le TTS)
 		
@@ -149,95 +144,82 @@ public class ShakeService extends Service implements TextToSpeech.OnInitListener
 
 	@Override
 	public void onUtteranceCompleted(String utteranceId) {
-		if(!last_init){ // Si il n'a pas déjà initialisé le processus de reconnaissance vocale
+		if(!last_init || (SpeechRecognizerWrapper.mIsListening && Speech_continu)){ // Si il n'a pas déjà initialisé le processus de reconnaissance vocale
 			myHandler.postDelayed(new Runnable(){
-
 				@Override
 				public void run() {
-					// TODO Auto-generated method stub
-					startVoiceRecognitionCycle();
-				}}, 500);}
+					LocalBroadcastManager.getInstance(context).sendBroadcast(Post_speech);
+				}}, 250);
+			}
 		else{fin();} // Sinon il remet tout à 0
 	}
 	
+	
+
 	public void getTTS(){mTts = new TextToSpeech(this, this);} // Initialise le TTS
 
 	public IBinder onBind(Intent arg0) {return null;}
+    		
+	public String Random_String(){ // Choisit une chaine de caractères au hasard
+		ArrayList<String> list = new ArrayList<String>();
+		list.add("Comment puis-je vous aider, boss ?");
+		list.add("Un truc à dire, ma poule ?!");
+		
+		if(Prénom.compareTo("")!=0){
+			list.add("Oui, "+Prénom+" ?");}
+		
+		if(Nom.compareTo("")!=0){
+			list.add("Que voulez-vous, maître "+Nom+" ?");}
+		
+		if(Sexe.compareTo("")!=0){
+			list.add("Puis-je faire quelque chose pour vous, "+ Sexe+" ?");}
+		
+		if(Nom.compareTo("")!=0 && Sexe.compareTo("")!=0){
+			list.add(Sexe+" "+Nom+", je suis tout à vous !");}
+		
+		if(Pseudo.compareTo("")!=0){
+			list.add("Que veux-tu, mon petit "+Pseudo+" ?");}
+		
+		int randomInt = random.nextInt(list.size());
+        String Retour = list.get(randomInt).toString();
+		
+		return Retour;}
 	
-	private SpeechRecognizer getSpeechRevognizer(){ // Configure la reconnaissance vocale
-		if (speech == null) {
-			speech = SpeechRecognizer.createSpeechRecognizer(getApplicationContext());
-			speech.setRecognitionListener(this);}
-		return speech;}
+	public void getConfig(){ // Importe les options
+		SharedPreferences preferences= PreferenceManager.getDefaultSharedPreferences(this);
+		if(Traitement.Verif_Reseau(getApplicationContext())){
+			IPadress=preferences.getString("IPadress", "");} // Importe l'adresse du RPi
+    	else{IPadress=preferences.getString("IPadress_ext", "");}
+		
+		Token=preferences.getString("token", "");
+		TTS_Box=preferences.getBoolean("tts_pref", true);
+		Speech_continu=preferences.getBoolean("continu", true);
+		
+		Nom=preferences.getString("name", ""); // Importe l'identité de la personne
+		Prénom=preferences.getString("surname", "");
+		Sexe=preferences.getString("sexe", "");
+		Pseudo=preferences.getString("nickname", "");}
 
-	public void startVoiceRecognitionCycle(){ // Démarre le cycle de reconnaissance vocale
-		last_init=true;
-		getSpeechRevognizer().startListening(STT);}
+	public void onEvent(int arg0, Bundle arg1){}
 
-	public void stopVoiceRecognition(){ // Arrête le cycle de reconnaissance vocale
-		speechTimeout.cancel();
-		fin();}
+	public void fin(){ // Finalise le processus
+		if (speech != null) {
+			speech.cancel();
+			speech.destroy();
+			speech = null;}
 
-	public void onReadyForSpeech(Bundle params) { // Dès que la reconnaissance vocale est prête
-		Log.d(TAG,"onReadyForSpeech");
-		// create and schedule the input speech timeout
-		speechTimeout = new Timer();
-		speechTimeout.schedule(new SilenceTimer(), 5000);
-		}
+		last_shake=last_init=false;
+		if(n==0){ // Si "Yana, cache-toi"
+			this.stopSelf();}
+		
+		else if(Speech_continu){
+			last_shake=true;
+			last_init=true;}
+		}	
 
-	public void onBeginningOfSpeech() { // Dès qu'on commence à parler
-		Log.d(TAG,"onBeginningOfSpeech");
-		// Cancel the timeout because voice is arriving
-		speechTimeout.cancel();}
-
-	public void onBufferReceived(byte[] buffer) {}
-
-	public void onEndOfSpeech() {Log.d(TAG,"onEndOfSpeech");} // Dès qu'on arrête de parler
-
-	public void onError(int error) { // Si erreur, il affiche celle correspondante
-		String message;
-		switch (error){
-			case SpeechRecognizer.ERROR_AUDIO:
-				message = "Erreur d'enregistrement audio";
-				break;
-			case SpeechRecognizer.ERROR_CLIENT:
-				message = "Client side error";
-				break;
-			case SpeechRecognizer.ERROR_INSUFFICIENT_PERMISSIONS:
-				message = "Erreur de permission";
-				break;
-			case SpeechRecognizer.ERROR_NETWORK:
-				message = "Erreur de réseau";
-				break;
-			case SpeechRecognizer.ERROR_NETWORK_TIMEOUT:
-				message = "Erreur de réseau (trop long)";
-				break;
-			case SpeechRecognizer.ERROR_NO_MATCH:
-				message = "Il y a eu une erreur en contactant la reconnaissance vocale. Essayez de quitter l'application totalement ou de redémarrer le service.";
-				break;
-			case SpeechRecognizer.ERROR_RECOGNIZER_BUSY:
-				message = "La reconnaissance vocale est déjà utilisée";
-				break;
-			case SpeechRecognizer.ERROR_SERVER:
-				message = "Erreur du serveur";
-				break;
-			case SpeechRecognizer.ERROR_SPEECH_TIMEOUT:
-				message = "Pas d'ordre donné";
-				break;
-			default:
-				message = "Erreur inconnue";
-				break;}
-
-		fin();
-		Log.d(TAG,"onError code:" + error + " message: " + message);
-		Toast t = Toast.makeText(getApplicationContext(),
-				"Annulé : " + message.toString().toString(),
-				Toast.LENGTH_SHORT);
-		t.show();}
-
-	public void onResults(Bundle results) { // Dès la réception du résultat
-		String Resultat = results.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION).get(0).toString();
-		Log.d(TAG,"Ordre : " + Resultat);
+    public void onRecognizerFinished(String Resultat) {
+        Log.d(TAG,"Ordre : " + Resultat);
+        if(!Speech_continu) mSpeechRecognizerWrapper.Stop();last_init=true;
 		A_dire="";
 		if (speech != null) {
 			speech.destroy();
@@ -284,60 +266,18 @@ public class ShakeService extends Service implements TextToSpeech.OnInitListener
 			NewRep.putExtra("contenu", A_dire); // Envoie de la réponse à l'interface
 		 	LocalBroadcastManager.getInstance(this).sendBroadcast(NewRep);}
 		else{A_dire=" ";}
-		getTTS();} // Dicte la réponse
+		getTTS();
+		}
+    																													
+    @Override
+    public void onRecognizerStateChanged(RecognizerState state) {
+        Log.d(TAG, state.toString());
+        
+        if (state == RecognizerState.Error) {
+            Toast.makeText(this, state.toString(), Toast.LENGTH_SHORT).show();
+            fin();}
+    }
 
-	public void onRmsChanged(float rmsdB) {}
+    public void onRmsChanged(float rmsdB) {;}
 
-	public void onPartialResults(Bundle arg0) {}
-    		
-	public String Random_String(){ // Choisit une chaine de caractères au hasard
-		ArrayList<String> list = new ArrayList<String>();
-		list.add("Comment puis-je vous aider, boss ?");
-		list.add("Un truc à dire, ma poule ?!");
-		
-		if(Prénom.compareTo("")!=0){
-			list.add("Oui, "+Prénom+" ?");}
-		
-		if(Nom.compareTo("")!=0){
-			list.add("Que voulez-vous, maître "+Nom+" ?");}
-		
-		if(Sexe.compareTo("")!=0){
-			list.add("Puis-je faire quelque chose pour vous, "+ Sexe+" ?");}
-		
-		if(Nom.compareTo("")!=0 && Sexe.compareTo("")!=0){
-			list.add(Sexe+" "+Nom+", je suis tout à vous !");}
-		
-		if(Pseudo.compareTo("")!=0){
-			list.add("Que veux-tu, mon petit "+Pseudo+" ?");}
-		
-		int randomInt = random.nextInt(list.size());
-        String Retour = list.get(randomInt).toString();
-		
-		return Retour;}
-	
-	public void getConfig(){ // Importe les options
-		SharedPreferences preferences= PreferenceManager.getDefaultSharedPreferences(this);
-		if(Traitement.Verif_Reseau(getApplicationContext())){
-			IPadress=preferences.getString("IPadress", "");} // Importe l'adresse du RPi
-    	else{IPadress=preferences.getString("IPadress_ext", "");}
-		
-		Token=preferences.getString("token", "");
-		TTS_Box=preferences.getBoolean("tts_pref", true);
-		
-		Nom=preferences.getString("name", ""); // Importe l'identité de la personne
-		Prénom=preferences.getString("surname", "");
-		Sexe=preferences.getString("sexe", "");
-		Pseudo=preferences.getString("nickname", "");}
-
-	public void onEvent(int arg0, Bundle arg1){}
-
-	public void fin(){ // Finalise le processus
-		if (speech != null) {
-			speech.cancel();
-			speech.destroy();
-			speech = null;}
-		last_shake=last_init=false;
-		if(n==0){ // Si "Yana, cache-toi"
-			this.stopSelf();}
-		}	
 }

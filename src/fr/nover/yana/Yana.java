@@ -33,18 +33,26 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.EditText;
+import android.widget.ExpandableListView;
 import android.widget.ImageButton;
 import android.widget.ImageView;
+import android.widget.ListView;
 import android.widget.RelativeLayout;
 import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
+import android.widget.AdapterView.OnItemClickListener;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Locale;
 import java.util.Random;
+
 import fr.nover.yana.assistant_installation.Assistant_Installation;
+import fr.nover.yana.passerelles.ExpandableListAdapter;
 import fr.nover.yana.passerelles.Traitement;
 import fr.nover.yana.passerelles.ShakeDetector;
 
@@ -62,11 +70,11 @@ public class Yana extends Activity implements TextToSpeech.OnInitListener{
 		
     private TextToSpeech mTts;// Déclare le TTS
     
-    static boolean testTTS = false, testMAJ = false, AI, TTS_TEST;
+    static boolean testTTS = false, testMAJ = false, AI, TTS_TEST, Commande_actu=false;
 	    
     	// A propos du Service (Intent pour le lancer et servstate pour savoir l'état du service)
 	private Intent ShakeService;
-	static boolean servstate=false;
+	public static boolean servstate=false;
 	boolean Box_TTS, Box_TTS_presence;
 	
 	String Token="";
@@ -75,9 +83,13 @@ public class Yana extends Activity implements TextToSpeech.OnInitListener{
 	
 		// Conversation et liste de commandes
 	int n=1;
-	int m=999;
 	boolean update;
 	Handler myHandler = new Handler();
+	
+	ExpandableListAdapter listAdapter;
+    ExpandableListView expListView;
+    ArrayList<String> listDataHeader;
+    HashMap<String, ArrayList<String>> listDataChild;
 	
 		// S'il reçoit un signal Broadcast du Service, il réagit en conséquence
 	private BroadcastReceiver NewRecrep = new BroadcastReceiver() { 
@@ -119,7 +131,7 @@ public class Yana extends Activity implements TextToSpeech.OnInitListener{
 		IPadress.setInputType(InputType.TYPE_TEXT_VARIATION_WEB_EDIT_TEXT); // Définit l'EditText comme un champ URL
     	
     	getConfig(); // Actualise la configuration
-    	if(m==999){Commandes_actu();}
+    	if(!Commande_actu){Commandes_actu();}
     	if(update){Commandes_actu();} // Actualise les commandes si la config correspond
     		
     	ip_adress.setOnClickListener(new View.OnClickListener() { // Lance la configuration si on clique sur l'image à côté de l'adresse IP
@@ -159,7 +171,7 @@ public class Yana extends Activity implements TextToSpeech.OnInitListener{
     switch (requestCode) {
 		case RESULT_SPEECH: { // Dès que la reconnaissance vocale est terminée
 			if (resultCode == RESULT_OK && null != data) {
-	
+				
 				ArrayList<String> text = data.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);
 				Recrep = text.get(0); // Enregistre le résultat dans RecRep
 				
@@ -255,11 +267,11 @@ public class Yana extends Activity implements TextToSpeech.OnInitListener{
     		
     	ShakeService=new Intent(Yana.this, ShakeService.class); // Démarre le service en fonction de l'état de la box
     	boolean Box_shake=preferences.getBoolean("shake", true);
-    	if((Box_shake==true) && servstate==false){
+    	if((Box_shake==true) && servstate==false){startService(ShakeService);}
+    	else if((Box_shake==false) && servstate==true){stopService(ShakeService);}
+    	else { // Réactualise les variables au cas où on passe d'une reco en continu à une reco par Shake
+    		stopService(ShakeService);
     		startService(ShakeService);}
-    		
-    	if((Box_shake==false) && servstate==true){
-    		stopService(ShakeService);}
     	
     	Traitement.Voice_Sens = Double.parseDouble(preferences.getString("Voice_sens", "3.0"))* Math.pow(10.0,-2.0); // Importe la sensibilité de la comparaison des chaines de caractères
     	if (Traitement.Voice_Sens>=1){
@@ -269,11 +281,6 @@ public class Yana extends Activity implements TextToSpeech.OnInitListener{
     	        	t.show();}
     	
     	float Shake_sens=Float.parseFloat(preferences.getString("shake_sens", "3.0f")); // Importe la sensibilité du Shake
-		if(Shake_sens<=1)   { 		
-			Toast t = Toast.makeText(getApplicationContext(),
-			"Attention ! Votre sensibilité de Shake est trop basse donc elle a été réhaussée à 3.",
-			Toast.LENGTH_SHORT);
-        	t.show();}
 		ShakeDetector.getConfig(Shake_sens);
 		Log.d("End of Config","");}
         
@@ -290,9 +297,6 @@ public class Yana extends Activity implements TextToSpeech.OnInitListener{
 					Toast.LENGTH_SHORT);
 			t.show();}
         }  
-    
-    public static void ServiceState(boolean etat){ // Etat du service
-		servstate=etat;}
 
     void conversation(String Texte, String Envoi){ // Ici on inscrit la conversation entre l'utilisateur et le RPi
     	
@@ -342,46 +346,26 @@ public class Yana extends Activity implements TextToSpeech.OnInitListener{
             public void run(){((ScrollView) findViewById(R.id.conversation_scroll)).fullScroll(View.FOCUS_DOWN);}}); // Pour ancrer en bas à chaque nouvel ordre
     	}
     
-    void Commandes_Layout(String Commande, int i){ // Ici, on va inscrire les commandes sur le panel
+	void Commandes_Layout(){ // Ici, on va inscrire les commandes sur le panel
     	
-    	final View Conversation_layout =  findViewById(R.id.commandes_layout);
-    	
-    	if(1000+i<=m){ // Si le TextView a déjà été créé, il change juste le contenu
-    		TextView Commande_TV=(TextView) findViewById(1000+i);
-    		Commande_TV.setText(Commande);}
-    	else{ // Sinon il le créé avec les bons paramètres
-	        TextView Commande_TV = new TextView(this);
-	        Commande_TV.setText(Commande);
-	        Commande_TV.setId(1000+i);
-	        Commande_TV.setClickable(true);
-	        Commande_TV.setFocusable(true);
+    	ListView Commandes_List =(ListView) findViewById(R.id.commandes_layout);
+		ArrayAdapter<String> modeAdapter = new ArrayAdapter<String>(this, R.drawable.command_list, Traitement.Commandes);
+		Commandes_List.setAdapter(modeAdapter);
 	        
-	        RelativeLayout.LayoutParams params = new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.WRAP_CONTENT, RelativeLayout.LayoutParams.WRAP_CONTENT); // Importation des parametres (en dessous du précédent)
-	        	
-	        params.addRule(RelativeLayout.ALIGN_PARENT_LEFT);
-	        params.addRule(RelativeLayout.BELOW, (999+i));
-	
-	        Commande_TV.setPadding(10, 10, 10, 10);
-	        params.setMargins(20, 0, 20, 20);
-	        
-	        Commande_TV.setLayoutParams(params);
-	        ((ViewGroup) Conversation_layout).addView(Commande_TV);
-	        
-	        Commande_TV.setOnClickListener(new View.OnClickListener() {
-	    		public void onClick(View v){
-	    	
-	    		View TextView_C = findViewById(v.getId());
-	    		TextView_C.setBackgroundResource(R.drawable.layout_selector);
-	        	Prétraitement(Traitement.Commandes.get(v.getId()-1000), Traitement.Liens.get(v.getId()-1000));}});
-	    	m=m+1;}}
+		Commandes_List.setOnItemClickListener(new OnItemClickListener() {
+    	    public void onItemClick(AdapterView<?> arg0, View view, int arg2,long itemID) {
+    	    	int ID=(int)itemID;
+    	    	Prétraitement(Traitement.Commandes.get(ID), Traitement.Liens.get(ID)); }
+			});}
 
     void Commandes_actu(){ // Ici on va actualiser la liste des commandes
     	ConnectivityManager cm = (ConnectivityManager) getApplicationContext()
                 .getSystemService(Context.CONNECTIVITY_SERVICE);
  
         NetworkInfo activeNetwork = cm.getActiveNetworkInfo();
-    	
-    	if(m>999 && Token.compareTo("")!=0){
+
+		
+    	if(!Commande_actu && Token.compareTo("")!=0){
     		if(activeNetwork!=null){
 		    	if(Traitement.pick_JSON(IPadress.getText().toString(), Token)){ // Commence le protocole de reception et les enregistre dans une ArrayList
 		    		Toast toast= Toast.makeText(getApplicationContext(), 
@@ -421,6 +405,7 @@ public class Yana extends Activity implements TextToSpeech.OnInitListener{
     		Traitement.Confidences.add("");}
     	
     	else{
+    		Commande_actu=true;
     		Traitement.Commandes.clear();
     		Traitement.Liens.clear();
     		Traitement.Confidences.clear();
@@ -433,12 +418,7 @@ public class Yana extends Activity implements TextToSpeech.OnInitListener{
     		Traitement.Liens.add("");
     		Traitement.Confidences.add("");}
     	
-    	for(int i=0; i<Traitement.Commandes.size(); i++){Commandes_Layout(Traitement.Commandes.get(i), i);} // Commence à l'inscrire sur la Layout prévue à cet effet
-		while(m>=Traitement.Commandes.size()+1000){ // Si il y a moins de commande qu'avant l'update, il effacera les affichages en trop
-			TextView Commande_TV=(TextView) findViewById(m);
-			Commande_TV.setVisibility(View.GONE);
-			m--;}
-	}
+    	Commandes_Layout();}
     
     void Prétraitement(final String Ordre, final String URL){ // Ici, on va analyser la réponse si elle est traitable localement. Sinon, on l'envoie au RPi
     	conversation(Ordre, "envoi");
@@ -453,6 +433,7 @@ public class Yana extends Activity implements TextToSpeech.OnInitListener{
     
     void Prétraitement2 (String Ordre, String URL){ // Deuxième partie du Prétraitement (MyHandler l'oblige pour afficher l'ordre avant le traitement)
     	Rep="";
+    	Log.d("Reco_invalide",""+Traitement.reco_invalide);
     	  
     	if(Ordre.compareTo(Traitement.Commandes.get(0))==0){ // Vérification du "Yana, cache-toi"
     		SharedPreferences.Editor geted = PreferenceManager.getDefaultSharedPreferences(this).edit();
@@ -464,7 +445,8 @@ public class Yana extends Activity implements TextToSpeech.OnInitListener{
     		else{Rep="Votre service est déjà désactivé.";}
     	}
     	
-    	else if(Ordre.compareTo(Recrep)==0){Rep="Aucun ordre ne semble être identifié au votre.";} // Si Ordre=Recrep alors c'est que la reconnaissance par pertinence a échoué
+    	else if(Ordre.compareTo(Recrep)==0 && !Traitement.reco_invalide){Rep="Aucun ordre ne semble être identifié au votre.";} // Si Ordre=Recrep alors c'est que la reconnaissance par pertinence a échoué
+    	else if(Traitement.reco_invalide){Rep="Vous n'avez pas activé la reconaissance adaptée pour cette commande.";}
     	else{
     		ConnectivityManager cm = (ConnectivityManager) getApplicationContext()
                     .getSystemService(Context.CONNECTIVITY_SERVICE);
@@ -508,6 +490,5 @@ public class Yana extends Activity implements TextToSpeech.OnInitListener{
         String Retour = list.get(randomInt).toString();
 		
 		return Retour;}
-
 
 }

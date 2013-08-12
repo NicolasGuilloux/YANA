@@ -24,6 +24,7 @@ import android.preference.PreferenceManager;
 import android.util.Log;
 import android.widget.Toast;
 
+@SuppressLint("DefaultLocale")
 public class Traitement {
 	
 	static String Reponse=""; // Déclare la variable de réponse
@@ -31,12 +32,16 @@ public class Traitement {
  	private static final String TAG=""; // Logger tag
  	public static double Voice_Sens; // Sensibilité de la comparaison entre ordres et commandes
  	static public String URL="", XBMC;
- 	static public boolean XBMC_passe=false;
+ 	static public boolean reco_invalide;
  	
  		// Déclare les ArraList utilisées pour stocker les éléments de commandes
  	public static ArrayList<String> Commandes = new ArrayList<String>();
  	public static ArrayList<String> Liens = new ArrayList<String>();
  	public static ArrayList<String> Confidences = new ArrayList<String>();
+ 	
+ 	public static ArrayList<String> Reco_spec = new ArrayList<String>();
+ 	public static ArrayList<Boolean> Reco_bool = new ArrayList<Boolean>();
+ 	public static ArrayList<Boolean> Reco_add = new ArrayList<Boolean>(); 	
  	
  	static boolean retour; // Déclare le retour pour la passerelles JsonParser
  	
@@ -45,51 +50,80 @@ public class Traitement {
 	public static int Comparaison(String Enregistrement){ // Processus de comparaison pour faire une reconnaissance par pertinence
 		int n=-1;
 		double c=0,co;
+		reco_invalide=false;
 		try{
+			Log.d("Reco_spec",""+Reco_spec.get(0));
+			Log.d("Reco_bool",""+Reco_bool.get(0));
 			for (int i = 0; i < Commandes.size(); i++){
-			co=LevenshteinDistance.similarity(Enregistrement, Commandes.get(i));
-			if(co>c && co>Double.parseDouble(Confidences.get(i))-Voice_Sens){
-				c=co;
-				n=i;}
+				co=LevenshteinDistance.similarity(Enregistrement, Commandes.get(i));
+				if(co>c && co>Double.parseDouble(Confidences.get(i))-Voice_Sens){
+					c=co;
+					n=i;}
 		}}
 		catch(Exception e){Log.e("log_tag", "Erreur pour la comparaison : "+e.toString());}
 		if(c<Voice_Sens){n=-1;} // Compare en fonction de la sensibilité (cf option)
+		for (int y = 0; y < Reco_spec.size(); y++){
+			Log.d("",""+Reco_spec.get(y));
+			if(n>0){
+			if(Liens.get(n).contains(Reco_spec.get(y).toLowerCase())){
+				if(!Reco_bool.get(y)){
+					Log.d("Non choisi !","Il n'y a pas d'activer le reco "+Reco_spec.get(y));
+					reco_invalide=true;}}}}
 		return n;} // Retourne le résultat
 	
 	public static String HTTP_Contact(String URL){
 		Log.d("Echange avec le serveur",""+URL);
-	    
-	    	JsonParser jParser = new JsonParser ();
-	    try{json = jParser.getJSONFromUrl(URL);}
-	    catch(Exception e){Log.d("Echec du contact","Le server n'a pas pu être contacté");}
-	    	
-	    try{JSONArray commands = json.getJSONArray("responses");
-			JSONObject Rep = commands.getJSONObject(0); // Importe la première valeur
-			Reponse=Rep.getString("sentence");
-			for (int i = 1; i < commands.length(); i++) { // Importe les autres valeurs s'il y en a
-				JSONObject emp = commands.getJSONObject(i);
-				if("talk".compareTo(emp.getString("type"))==0){
-					Reponse=Reponse+" \n"+emp.getString("sentence");}}}
-		catch(JSONException e){e.printStackTrace();}
-		catch(Exception e){
-			try{
-				JSONArray commands = json.getJSONArray("error");
+		boolean Action_done=false;
+		for (int y = 0; y < Reco_spec.size(); y++){
+			if(URL.contains(Reco_spec.get(y))){
+				Action_done=true;
+				if(URL.contains("disable")){
+					Reco_bool.set(y, false);
+					Reponse="La reconnaissance "+Reco_spec.get(y)+" est maintenant désactivée.";}
+				else{
+					Reco_bool.set(y, true);
+					Reponse="La reconnaissance "+Reco_spec.get(y)+" est maintenant activée.";}
+			}}
+		
+	    if(!Action_done){
+		    JsonParser jParser = new JsonParser ();
+		    try{json = jParser.getJSONFromUrl(URL);}
+		    catch(Exception e){Log.d("Echec du contact","Le server n'a pas pu être contacté");}
+		    	
+		    try{JSONArray commands = json.getJSONArray("responses");
 				JSONObject Rep = commands.getJSONObject(0); // Importe la première valeur
-				Reponse=Rep.getString("error");}
-			catch(JSONException x){e.printStackTrace();}
-			catch(Exception x){
-				Reponse="Il y a eu une erreur lors du contact avec le Raspberry Pi.";}
-			}
+				Reponse=Rep.getString("sentence");
+				for (int i = 1; i < commands.length(); i++) { // Importe les autres valeurs s'il y en a
+					JSONObject emp = commands.getJSONObject(i);
+					if("talk".compareTo(emp.getString("type"))==0){
+						Reponse=Reponse+" \n"+emp.getString("sentence");}}}
+			catch(JSONException e){e.printStackTrace();}
+			catch(Exception e){
+				try{
+					JSONArray commands = json.getJSONArray("error");
+					JSONObject Rep = commands.getJSONObject(0); // Importe la première valeur
+					Reponse=Rep.getString("error");}
+				catch(JSONException x){e.printStackTrace();}
+				catch(Exception x){
+					Reponse="Il y a eu une erreur lors du contact avec le Raspberry Pi.";}
+				}}
 	    	
     	return Reponse;}
 	
-	@SuppressLint("DefaultLocale")
 	public static boolean pick_JSON(String IPadress, String Token){
 		retour=true;
 
 		Commandes.clear();
 		Liens.clear();
 		Confidences.clear();
+		
+		Reco_spec.clear();
+		Reco_bool.clear();
+		Reco_add.clear();
+		
+		Reco_spec.add("XBMC");
+		Reco_bool.add(false);
+		Reco_add.add(false);
 
 	 	JsonParser jParser = new JsonParser ();
 	 	try{json = jParser.getJSONFromUrl("http://"+IPadress+"?action=GET_SPEECH_COMMAND&token="+Token);}
@@ -109,6 +143,19 @@ public class Traitement {
 					StringTokenizer tokens = new StringTokenizer(URL, "?");
 					tokens.nextToken();
 					URL = tokens.nextToken();
+					
+					for (int y = 0; y < Reco_spec.size(); y++){
+						if(URL.contains(Reco_spec.get(y).toLowerCase()) && !Reco_add.get(y)){						
+							Commandes.add("YANA, active la reco "+Reco_spec.get(y));
+							Liens.add(Reco_spec.get(y)+"_able");
+							Confidences.add("0.7");
+							
+							Commandes.add("YANA, désactive la reco "+Reco_spec.get(y));
+							Liens.add(Reco_spec.get(y)+"_disable");
+							Confidences.add("0.7");
+							
+							Reco_add.set(y, true);}}
+					
 					if(!URL.contains("sound")){
 						Commandes.add(Command);
 						Liens.add(URL);
@@ -131,6 +178,10 @@ public class Traitement {
 		Commandes.add(0, "YANA, cache-toi.");
 		Liens.add(0, "");
 		Confidences.add(0, "0.7");
+		
+		Reco_spec.add("     ");
+		Reco_bool.add(false);
+		Reco_add.add(false);
 		
 		return retour;}
 	

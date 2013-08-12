@@ -1,6 +1,5 @@
 package fr.nover.yana.passerelles;
 
-import android.annotation.SuppressLint;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
@@ -31,7 +30,6 @@ public class ShakeDetector implements SensorEventListener {
         // ignore
     }
 
-    @SuppressLint("FloatMath")
 	@Override
     public void onSensorChanged(SensorEvent event) {
 

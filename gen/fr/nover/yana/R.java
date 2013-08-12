@@ -42,23 +42,26 @@ or to a theme attribute in the form "<code>?[<i>package</i>:][<i>type</i>:]<i>na
     }
     public static final class drawable {
         public static final int above_shadow=0x7f020000;
-        public static final int envoi=0x7f020001;
-        public static final int finish_background=0x7f020002;
-        public static final int ic_launcher=0x7f020003;
-        public static final int ip_adress=0x7f020004;
-        public static final int item_focused=0x7f020005;
-        public static final int item_pressed=0x7f020006;
-        public static final int layout_selector=0x7f020007;
-        public static final int linearborder=0x7f020008;
-        public static final int reponse=0x7f020009;
-        public static final int selectable_item_background=0x7f02000a;
+        public static final int command_list=0x7f020001;
+        public static final int envoi=0x7f020002;
+        public static final int finish_background=0x7f020003;
+        public static final int ic_launcher=0x7f020004;
+        public static final int ip_adress=0x7f020005;
+        public static final int item_focused=0x7f020006;
+        public static final int item_pressed=0x7f020007;
+        public static final int layout_selector=0x7f020008;
+        public static final int linearborder=0x7f020009;
+        public static final int list_group=0x7f02000a;
+        public static final int list_item=0x7f02000b;
+        public static final int reponse=0x7f02000c;
+        public static final int selectable_item_background=0x7f02000d;
     }
     public static final class id {
-        public static final int Btnconfiguration=0x7f0b001a;
+        public static final int Btnconfiguration=0x7f0b001c;
         public static final int IPadress=0x7f0b000d;
         public static final int SSID=0x7f0b0009;
         public static final int btnRec=0x7f0b000f;
-        public static final int commandes_layout=0x7f0b0015;
+        public static final int commandes_layout=0x7f0b0013;
         public static final int conversation=0x7f0b0011;
         public static final int conversation_scroll=0x7f0b0010;
         public static final int divider=0x7f0b0002;
@@ -69,15 +72,17 @@ or to a theme attribute in the form "<code>?[<i>package</i>:][<i>type</i>:]<i>na
         public static final int ipadress_ext=0x7f0b000a;
         public static final int ipadress_int=0x7f0b0008;
         public static final int layout_interface=0x7f0b000b;
+        public static final int lblListHeader=0x7f0b0019;
+        public static final int lblListItem=0x7f0b001a;
+        public static final int lvExp=0x7f0b0015;
         public static final int merci=0x7f0b0016;
         public static final int next_button=0x7f0b0004;
         public static final int pager=0x7f0b0001;
         public static final int prev_button=0x7f0b0003;
-        public static final int scroll_commandes=0x7f0b0013;
         public static final int slideview=0x7f0b0017;
         public static final int strip=0x7f0b0000;
         public static final int tts_pref_false=0x7f0b000e;
-        public static final int updateCom=0x7f0b0019;
+        public static final int updateCom=0x7f0b001b;
         public static final int your_name=0x7f0b0005;
         public static final int your_nickname=0x7f0b0007;
         public static final int your_surname=0x7f0b0006;
@@ -173,7 +178,7 @@ or to a theme attribute in the form "<code>?[<i>package</i>:][<i>type</i>:]<i>na
 
           <p>Must be a reference to another resource, in the form "<code>@[+][<i>package</i>:]<i>type</i>:<i>name</i></code>"
 or to a theme attribute in the form "<code>?[<i>package</i>:][<i>type</i>:]<i>name</i></code>".
-          @attr name android:textAppearanceFinish
+          @attr name fr.nover.yana:textAppearanceFinish
         */
         public static final int AppTheme_textAppearanceFinish = 0;
     };

@@ -39,13 +39,19 @@
 		        android:layout_alignRight="@+id/btnRec"
 		        android:layout_below="@+id/ip_adress"
 		        android:id="@+id/conversation_scroll" >
+		        
+		        <RelativeLayout
+		            android:layout_width="fill_parent"
+			        android:layout_height="wrap_content" >
 		
-			    <RelativeLayout
-			        android:layout_width="fill_parent"
-		        	android:layout_height="wrap_content"
-		        	android:id="@+id/conversation" >
-			        
-			    </RelativeLayout>
+				    <RelativeLayout
+				        android:layout_width="fill_parent"
+			        	android:layout_height="wrap_content"
+			        	android:id="@+id/conversation" >
+				        
+				    </RelativeLayout>
+				    
+		        </RelativeLayout>
 			</ScrollView>
 		
 		    <TextView
@@ -70,7 +76,7 @@
 		        android:id="@+id/drawer"
 		        android:layout_width="fill_parent"
 		        android:layout_height="fill_parent"
-		        android:content="@+id/scroll_commandes"
+		        android:content="@+id/commandes_layout"
 		        android:handle="@+id/handle"
 		        android:orientation="vertical" >
 		        
@@ -93,21 +99,18 @@
 				   		android:background="@drawable/linearborder"
 				        android:text="@string/commandes" />
 			    </RelativeLayout>
-		
-			    <ScrollView
-			        android:layout_width="fill_parent"
-			    	android:layout_height="fill_parent"
-			    	android:id="@+id/scroll_commandes" >
+			    
+		        	<ExpandableListView
+		                android:id="@+id/lvExp"
+		                android:layout_height="match_parent"
+		                android:layout_width="match_parent"/>   
 		        	
-		        	<RelativeLayout
+		        	<ListView
 			            android:id="@+id/commandes_layout"
 			            android:layout_width="fill_parent"
-			            android:layout_height="wrap_content"
+			            android:layout_height="fill_parent"
 			            android:background="#fff"
 			       		android:clickable="true" />
-		        	
-		        </ScrollView>
-		        
 		    </SlidingDrawer>
 		    
 		</RelativeLayout>

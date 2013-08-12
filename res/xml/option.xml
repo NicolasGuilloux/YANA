@@ -63,8 +63,15 @@
 						android:title="Sensibilité du Shake (entre 1 et 5)"
 						android:defaultValue="3.0"
 						android:inputType="numberDecimal" 
-						android:summary="Augmentez pour le rendre moins sensible">
+						android:summary="Augmentez pour le rendre moins sensible"
+					    android:dependency="shake" >
 					</EditTextPreference>
+					<CheckBoxPreference
+					    android:key="continu"
+					    android:title="Activer la reconnaissance vocale en continu"
+					    android:summary="Cochez pour activer la reconnaissance vocale en continu"
+					    android:defaultValue="False"
+					    android:dependency="shake" />
 				</PreferenceCategory>
 				<PreferenceCategory android:title="Autres options" >
 					<CheckBoxPreference
