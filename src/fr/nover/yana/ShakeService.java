@@ -62,6 +62,7 @@ public class ShakeService extends Service implements TextToSpeech.OnInitListener
     
     Intent STT;
 	Handler myHandler = new Handler();
+	Context context;
     
 		// Logger tag
  	private static final String TAG="";
@@ -72,19 +73,15 @@ public class ShakeService extends Service implements TextToSpeech.OnInitListener
  	Intent NewRecrep = new Intent("NewRecrep"); 
  	Intent NewRep = new Intent("NewRep");
  	Intent Post_speech = new Intent("Post_speech");
- 	static Context context;
  	
  		// Valeur de retour de la Comparaison
  	int n=-1;
  	
  	final BroadcastReceiver mReceiver = new ScreenReceiver();
- 	
- 	public static void Finish(){((Service) context).stopSelf();}
 	
 	public void onCreate(){
     	super.onCreate();
     	
-    	context = getApplicationContext();
     	Yana.servstate=true; // Définit l'état du service pour Yana
         
     	mSensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE); // Définit tous les attributs du Shake

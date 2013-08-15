@@ -14,8 +14,6 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import fr.nover.yana.EventService;
-import fr.nover.yana.ShakeService;
 import fr.nover.yana.Yana;
 
 import android.annotation.SuppressLint;
@@ -250,7 +248,7 @@ public class Traitement {
 			geted.putBoolean("shake", false);
 			geted.commit();
 			if(Yana.servstate==true){
-				ShakeService.Finish();
+				context.stopService(Yana.mShakeService);
 				Rep="Le ShakeService est maintenant désactivé.";}
 			else{Rep="Votre service est déjà désactivé.";}
 			return true;}
@@ -268,7 +266,7 @@ public class Traitement {
 			geted.putBoolean("event", false);
 			geted.commit();
 			if(Yana.eventstate==true){
-				EventService.Finish();
+				context.stopService(Yana.mEventService);
 				Rep="Les événements sont maintenant désactivés.";}
 			else{Rep="Les événements sont déjà désactivés.";}
 			return true;}

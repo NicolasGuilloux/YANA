@@ -260,15 +260,15 @@ public class Yana extends Activity implements TextToSpeech.OnInitListener{
     	mShakeService=new Intent(Yana.this, ShakeService.class); // Démarre le service en fonction de l'état de la box
     	boolean Box_shake=preferences.getBoolean("shake", false);
     	if((Box_shake==true) && servstate==false){startService(mShakeService);}
-    	else if((Box_shake==false) && servstate==true){ShakeService.Finish();}
+    	else if((Box_shake==false) && servstate==true){stopService(mShakeService);}
     	else if((Box_shake==true) && servstate==true){ // Réactualise les variables au cas où on passe d'une reco en continu à une reco par Shake
-    		ShakeService.Finish();
+    		stopService(mShakeService);
     		startService(mShakeService);}
     	
     	mEventService=new Intent(Yana.this, EventService.class); // Démarre le service en fonction de l'état de la box
     	boolean Box_Event=preferences.getBoolean("event", false);
     	if((Box_Event==true) && eventstate==false){startService(mEventService);}
-    	else if((Box_Event==false) && eventstate==true){EventService.Finish();}
+    	else if((Box_Event==false) && eventstate==true){stopService(mEventService);}
     	
     	Traitement.Voice_Sens = Double.parseDouble(preferences.getString("Voice_sens", "3.0"))* Math.pow(10.0,-2.0); // Importe la sensibilité de la comparaison des chaines de caractères
     	if (Traitement.Voice_Sens>=1){
@@ -373,7 +373,7 @@ public class Yana extends Activity implements TextToSpeech.OnInitListener{
 		    	
 		    	else{
 		    		Toast toast= Toast.makeText(getApplicationContext(), // En cas d'échec, il prévient l'utilisateur
-		    		Traitement.Commandes.get(1), 4000);  
+		    		Traitement.Commandes.get(Traitement.Commandes.size()-1), 4000);  
 					toast.setGravity(Gravity.TOP|Gravity.CENTER_HORIZONTAL, 0, 80);
 					toast.show();}}
 		    else{
@@ -389,16 +389,16 @@ public class Yana extends Activity implements TextToSpeech.OnInitListener{
     		Traitement.Liens.clear();
     		Traitement.Confidences.clear();
     		
-    		Toast toast= Toast.makeText(getApplicationContext(), // En cas d'échec, il prévient l'utilisateur
-    		"Vous n'avez pas entré le Token. L'application ne peut pas communiquer avec votre Raspberry Pi.", 4000);  
-    		toast.setGravity(Gravity.TOP|Gravity.CENTER_HORIZONTAL, 0, 80);
-    		toast.show();
-    		
     		Traitement.Add_Commandes();
 			
     		Traitement.Commandes.add("Vous n'avez pas entré le Token. L'application ne peut pas communiquer avec votre Raspberry Pi.");
     		Traitement.Liens.add("");
-    		Traitement.Confidences.add("");}
+    		Traitement.Confidences.add("");
+    		
+    		Toast toast= Toast.makeText(getApplicationContext(), // En cas d'échec, il prévient l'utilisateur
+    		Traitement.Commandes.get(Traitement.Commandes.size()-1), 4000);  
+    		toast.setGravity(Gravity.TOP|Gravity.CENTER_HORIZONTAL, 0, 80);
+    		toast.show();}
     	
     	else{
     		Commande_actu=true;

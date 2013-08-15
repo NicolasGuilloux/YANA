@@ -15,7 +15,6 @@ import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
-import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.media.AudioManager;
@@ -53,9 +52,6 @@ public class EventService extends Service implements OnUtteranceCompletedListene
     
     Toast toast;
     TextView textView;
-    static Context context;
-    
-    public static void Finish(){((Service) context).stopSelf();}
 	
 	@Override
 	public void onCreate(){
@@ -63,8 +59,6 @@ public class EventService extends Service implements OnUtteranceCompletedListene
 		LayoutInflater layoutInflater = (LayoutInflater)
 				   getSystemService(LAYOUT_INFLATER_SERVICE);
 		View layout = layoutInflater.inflate(R.layout.toast_layout, null);
-		
-		context = getApplicationContext();
 		
 		toast = new Toast(getApplicationContext());
 		toast.setGravity(Gravity.TOP|Gravity.LEFT, 0, 80);
@@ -94,7 +88,8 @@ public class EventService extends Service implements OnUtteranceCompletedListene
 			IPadress=preferences.getString("IPadress", "");} // Importe l'adresse du RPi
     	else{IPadress=preferences.getString("IPadress_ext", "");}
 		Token=preferences.getString("token", "");
-		Time=Integer.valueOf(preferences.getString("event_temp", ""))*1000;
+	try{Time=Integer.valueOf(preferences.getString("event_temp", ""))*1000;}
+	catch(Exception e){Time=20;}
 		Sound=preferences.getBoolean("event_sound", true);
 		Toasts=preferences.getBoolean("event_toast", true);
 		Notifs=preferences.getBoolean("event_notif", true);
@@ -137,10 +132,7 @@ public class EventService extends Service implements OnUtteranceCompletedListene
 	 	json_prec=json;
 	 	
 	 	i=0;
-	 	if(!first){
-	 		first=true;
-	 		Traitement();}
-	 	else if(entree) Traitement();
+	 	if(entree || !first) Traitement();
 	 	
 	 	Runnable = new Runnable(){
 			@Override
@@ -180,7 +172,8 @@ public class EventService extends Service implements OnUtteranceCompletedListene
 			Log.d("","Phrase : "+Contenu.get(i));
 			if(Talk.get(i)){
 				Phrase=Contenu.get(i);
-					if(Sound){mTts = new TextToSpeech(this, this);}
+					if(!first) first=true;
+					else if(Sound) mTts = new TextToSpeech(this, this);
 				}
 			else{
 				String Son=Contenu.get(i);
