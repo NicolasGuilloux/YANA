@@ -249,7 +249,7 @@ public class ShakeService extends Service implements TextToSpeech.OnInitListener
 	            NetworkInfo activeNetwork = cm.getActiveNetworkInfo();
 	            
 		    	if(activeNetwork!=null){ // Vérifie le réseau
-		    		A_dire = Traitement.HTTP_Contact("http://"+IPadress+"?"+URL+"&token="+Token);} // Envoie au RPi et enregistre sa réponse
+		    		A_dire = Traitement.HTTP_Contact("http://"+IPadress+"?"+URL+"&token="+Token, getApplicationContext());} // Envoie au RPi et enregistre sa réponse
 	        	else{
 	        		Toast toast= Toast.makeText(getApplicationContext(), // En cas d'échec, il prévient l'utilisateur
 	    			    	"Vous n'avez pas de connexion internet !", 4000);  
@@ -260,7 +260,8 @@ public class ShakeService extends Service implements TextToSpeech.OnInitListener
 			NewRep.putExtra("contenu", A_dire); // Envoie de la réponse à l'interface
 		 	LocalBroadcastManager.getInstance(this).sendBroadcast(NewRep);}
 		else{A_dire=" ";}
-		getTTS();}
+		if(!Traitement.Sons) getTTS();
+		else Traitement.Sons=false;}
     																													
     @Override
     public void onRecognizerStateChanged(RecognizerState state) {

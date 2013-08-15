@@ -21,9 +21,11 @@ import fr.nover.yana.Yana;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.media.MediaPlayer;
 import android.net.ConnectivityManager;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
+import android.os.PowerManager;
 import android.preference.PreferenceManager;
 import android.util.Log;
 import android.widget.Toast;
@@ -36,7 +38,7 @@ public class Traitement {
  	private static final String TAG=""; // Logger tag
  	public static double Voice_Sens; // Sensibilité de la comparaison entre ordres et commandes
  	static public String URL="", XBMC, Rep;
- 	static public boolean reco_invalide;
+ 	static public boolean reco_invalide, Sons;
  	
  		// Déclare les ArraList utilisées pour stocker les éléments de commandes
  	public static ArrayList<String> Commandes = new ArrayList<String>();
@@ -75,9 +77,10 @@ public class Traitement {
 					reco_invalide=true;}}}}
 		return n;} // Retourne le résultat
 	
-	public static String HTTP_Contact(String URL){
+	public static String HTTP_Contact(String URL, Context context){
 		Log.d("Echange avec le serveur",""+URL);
 		boolean Action_done=false;
+		
 		for (int y = 0; y < Reco_spec.size(); y++){
 			if(URL.contains(Reco_spec.get(y))){
 				Action_done=true;
@@ -96,11 +99,28 @@ public class Traitement {
 		    	
 		    try{JSONArray commands = json.getJSONArray("responses");
 				JSONObject Rep = commands.getJSONObject(0); // Importe la première valeur
-				Reponse=Rep.getString("sentence");
+				String type = Rep.getString("type");
+				
+				if(type.compareTo("talk")==0){
+					Reponse=Rep.getString("sentence");}
+				
+				else if (Rep.getString("type").compareTo("sound")==0){
+					String Son = Rep.getString("file");
+					Son = Son.replace(".wav","");
+					Reponse="*"+Son+"*";
+					Media_Player(Son, context);}
+				
 				for (int i = 1; i < commands.length(); i++) { // Importe les autres valeurs s'il y en a
 					JSONObject emp = commands.getJSONObject(i);
 					if("talk".compareTo(emp.getString("type"))==0){
-						Reponse=Reponse+" \n"+emp.getString("sentence");}}}
+						Reponse=Reponse+" \n"+emp.getString("sentence");}
+					else if (Rep.getString("type").compareTo("sound")==0){
+						String Son = emp.getString("file");
+						Son = Son.replace(".wav","");
+						Reponse=Reponse+" \n"+"*"+Son+"*";
+						Media_Player(Son, context);}	
+				}
+			}
 			catch(JSONException e){e.printStackTrace();}
 			catch(Exception e){
 				try{
@@ -160,11 +180,9 @@ public class Traitement {
 							
 							Reco_add.set(y, true);}}
 					
-					if(!URL.contains("sound")){
 						Commandes.add(Command);
 						Liens.add(URL);
 						Confidences.add(emp.getString("confidence"));}
-					}
 			}
 		
 		 	catch(JSONException e){
@@ -295,5 +313,13 @@ public class Traitement {
 		Reco_bool.add(false);
 		Reco_add.add(false);
 	}
+	
+	public static void Media_Player(String Son, Context context){
+		Sons = true;
+		int ID = context.getResources().getIdentifier(Son, "raw", "fr.nover.yana");
+		
+		MediaPlayer mp = MediaPlayer.create(context, ID); 
+		mp.setWakeMode(context, PowerManager.PARTIAL_WAKE_LOCK);
+		mp.start();}
 	
 }

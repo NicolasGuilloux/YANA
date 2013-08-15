@@ -441,7 +441,7 @@ public class Yana extends Activity implements TextToSpeech.OnInitListener{
         	
         	if(activeNetwork!=null){ // Vérifie le réseau
         		Log.d("Ordre",""+Ordre);
-        			Rep = Traitement.HTTP_Contact("http://"+IPadress.getText().toString()+"?"+URL+"&token="+Token);} // Envoie au RPi et enregistre sa réponse
+        			Rep = Traitement.HTTP_Contact("http://"+IPadress.getText().toString()+"?"+URL+"&token="+Token, getApplicationContext());} // Envoie au RPi et enregistre sa réponse
         	else{
         		Toast toast= Toast.makeText(getApplicationContext(), // En cas d'échec, il prévient l'utilisateur
     			    	"Vous n'avez pas de connexion internet !", 4000);  
@@ -451,9 +451,10 @@ public class Yana extends Activity implements TextToSpeech.OnInitListener{
 		if(Rep.compareTo("")!=0){
 			conversation(Rep, "reponse");
 			
-			if(Box_TTS==true && Rep.length()<300){
-				mTts = new TextToSpeech(this, this);} // Lance la synthèse vocale si les options l'autorisent et si la réponse n'est pas trop longue
-    }}
+			if(Box_TTS==true && Rep.length()<300 && !Traitement.Sons){ // Lance la synthèse vocale si les options l'autorisent et si la réponse n'est pas trop longue
+				mTts = new TextToSpeech(this, this);}
+			else if(!Traitement.Sons) Traitement.Sons=false;
+		}}
     
     public String Random_String(){ // Choisit une chaine de caractères au hasard
 		ArrayList<String> list = new ArrayList<String>();
