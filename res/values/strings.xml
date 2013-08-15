@@ -2,7 +2,6 @@
 
     <string name="app_name">Yana</string>
     <string name="configuration">Configuration</string>
-    <string name="bienvenue">Bienvenue sur l\'interface Android de notre cher Yana ! Entrez bien l\'adresse de votre RPi dans la configuration.</string>
     <string name="IPadress">192.168.1.x/yana-server/action.php</string>
     <string name="IPadress_exterieure">www.adressedurpi.fr/yana-server/action.php</string>
     <string name="Soninfo">Voulez-vous une réponse audio ?</string>

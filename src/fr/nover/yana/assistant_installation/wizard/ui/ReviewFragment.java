@@ -213,6 +213,10 @@ public class ReviewFragment extends ListFragment implements ModelCallbacks {
 					get_config.ShakeService=true;}
 				else{get_config.ShakeService=false;}
 				
+				if(value.contains("événements")){
+					get_config.EventService=true;}
+				else{get_config.EventService=false;}
+				
 				if(value.contains("synthèse")){
 					get_config.TTS=true;}
 				else{get_config.TTS=false;}

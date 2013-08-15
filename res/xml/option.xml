@@ -52,12 +52,12 @@
             android:key="Config_Yana"
             android:title="Configuration de Yana for Android"
             android:persistent="false" >
-				<PreferenceCategory android:title="Configurez Yana sur Android" >
+				<PreferenceCategory android:title="Configurez le Service de reconnaissance vocale" >
 					<CheckBoxPreference
 					    android:key="shake"
 					    android:title="Activer le Shake"
 					    android:summary="Cochez pour activer le Shake"
-					    android:defaultValue="True" />
+					    android:defaultValue="False" />
 					<EditTextPreference
 						android:key="shake_sens"
 						android:title="Sensibilité du Shake (entre 1 et 5)"
@@ -72,6 +72,39 @@
 					    android:summary="Cochez pour activer la reconnaissance vocale en continu"
 					    android:defaultValue="False"
 					    android:dependency="shake" />
+				</PreferenceCategory>
+				<PreferenceCategory android:title="Configurez le Service d'événements" >
+					<CheckBoxPreference
+					    android:key="event"
+					    android:title="Activer les événements"
+					    android:summary="Cochez pour activer les événements"
+					    android:defaultValue="False" />
+					<EditTextPreference
+						android:key="event_temp"
+						android:title="Temps entre deux vérifications (secondes)"
+						android:defaultValue="55"
+						android:inputType="number" 
+						android:summary="Réglez le temps entre deux vérifications (secondes)"
+					    android:dependency="event" >
+					</EditTextPreference>
+					<CheckBoxPreference
+					    android:key="event_sound"
+					    android:title="Activer le son en général"
+					    android:summary="Cochez pour activer la diction des événements et les sons"
+					    android:defaultValue="True"
+					    android:dependency="event" />
+					<CheckBoxPreference
+					    android:key="event_toast"
+					    android:title="Activer les messages 'Toast'"
+					    android:summary="Cochez pour activer les messages 'Toast'"
+					    android:defaultValue="True"
+					    android:dependency="event" />
+					<CheckBoxPreference
+					    android:key="event_notif"
+					    android:title="Activer les notifications d'événements"
+					    android:summary="Cochez pour activer les notifications d'événements"
+					    android:defaultValue="True"
+					    android:dependency="event" />
 				</PreferenceCategory>
 				<PreferenceCategory android:title="Autres options" >
 					<CheckBoxPreference

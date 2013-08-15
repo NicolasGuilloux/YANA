@@ -84,33 +84,27 @@
 				    android:id="@+id/handle"
 		            android:layout_width="fill_parent"
 			        android:layout_height="40dip"
-			        android:background="@color/theme"
-			        android:radius="4dp"
 			        android:gravity="center"
 			        android:focusable="true"
-			        android:clickable="true"
-			        android:drawable="@drawable/layout_selector" >
+			        android:clickable="true" >
 			        
 			        <TextView
 			            android:gravity="center"
-				        android:layout_width="fill_parent"
-			            android:layout_height="fill_parent"
+				        android:layout_width="match_parent"
+			            android:layout_height="match_parent"
 				        android:textIsSelectable="false"
 				   		android:background="@drawable/linearborder"
 				        android:text="@string/commandes" />
-			    </RelativeLayout>
-			    
-		        	<ExpandableListView
-		                android:id="@+id/lvExp"
-		                android:layout_height="match_parent"
-		                android:layout_width="match_parent"/>   
+			    </RelativeLayout>  
 		        	
 		        	<ListView
 			            android:id="@+id/commandes_layout"
 			            android:layout_width="fill_parent"
 			            android:layout_height="fill_parent"
+			            android:listSelector="@color/click"
 			            android:background="#fff"
 			       		android:clickable="true" />
+		        	
 		    </SlidingDrawer>
 		    
 		</RelativeLayout>

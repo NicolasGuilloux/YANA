@@ -51,7 +51,7 @@ public class Stockage_AI extends AbstractWizardModel {
 		            )
 		            .setRequired(true),
 		        new MultipleFixedChoicePage(this, "Vous voulez activer ...")
-                	.setChoices("Le ShakeService", "La synthèse vocale", "La mise à jour des commandes au démarrage")
+                	.setChoices("Le ShakeService", "Les événements", "La synthèse vocale", "La mise à jour des commandes au démarrage")
        );
     }
 }

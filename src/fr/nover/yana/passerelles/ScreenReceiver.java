@@ -3,6 +3,7 @@ package fr.nover.yana.passerelles;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.util.Log;
 
 public class ScreenReceiver extends BroadcastReceiver {
 
@@ -16,5 +17,6 @@ public class ScreenReceiver extends BroadcastReceiver {
             // and do whatever you need to do here
             wasScreenOn = true;
         }
+        Log.d("Screen","On ? - "+wasScreenOn);
     }
 }

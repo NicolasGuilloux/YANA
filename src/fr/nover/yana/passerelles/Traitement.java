@@ -14,6 +14,10 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import fr.nover.yana.EventService;
+import fr.nover.yana.ShakeService;
+import fr.nover.yana.Yana;
+
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.SharedPreferences;
@@ -31,7 +35,7 @@ public class Traitement {
 	
  	private static final String TAG=""; // Logger tag
  	public static double Voice_Sens; // Sensibilité de la comparaison entre ordres et commandes
- 	static public String URL="", XBMC;
+ 	static public String URL="", XBMC, Rep;
  	static public boolean reco_invalide;
  	
  		// Déclare les ArraList utilisées pour stocker les éléments de commandes
@@ -174,15 +178,8 @@ public class Traitement {
 	 		Liens.add("");
 			Confidences.add("");
 	 		Commandes.add("Echec du contact avec le serveur. Veuillez vérifier votre système et l'adresse entrée.");}
-	 	
-		Commandes.add(0, "YANA, cache-toi.");
-		Liens.add(0, "");
-		Confidences.add(0, "0.7");
 		
-		Reco_spec.add("     ");
-		Reco_bool.add(false);
-		Reco_add.add(false);
-		
+	 	Add_Commandes();
 		return retour;}
 	
 	static void Verification_erreur(){
@@ -226,6 +223,77 @@ public class Traitement {
     			"Echec de la vérification du réseau. Mise en local par défaut", Toast.LENGTH_SHORT);  
     			toast.show();}
 		return false;
+	}
+	
+	public static boolean Verif_aux(String Commande, Context context){
+		SharedPreferences.Editor geted = PreferenceManager.getDefaultSharedPreferences(context).edit();
+		
+		if(Commande.contains("cache-toi")){
+			geted.putBoolean("shake", false);
+			geted.commit();
+			if(Yana.servstate==true){
+				ShakeService.Finish();
+				Rep="Le ShakeService est maintenant désactivé.";}
+			else{Rep="Votre service est déjà désactivé.";}
+			return true;}
+		
+		else if(Commande.contains("montre-toi")){
+			geted.putBoolean("shake", true);
+			geted.commit();
+			if(Yana.servstate==false){
+				context.startService(Yana.mShakeService);
+				Rep="Le ShakeService est maintenant activé.";}
+			else{Rep="Votre service est déjà activé.";}
+			return true;}
+		
+		else if(Commande.contains("désactive les événements")){
+			geted.putBoolean("event", false);
+			geted.commit();
+			if(Yana.eventstate==true){
+				EventService.Finish();
+				Rep="Les événements sont maintenant désactivés.";}
+			else{Rep="Les événements sont déjà désactivés.";}
+			return true;}
+		
+		else if(Commande.contains("active les événements")){
+			geted.putBoolean("event", true);
+			geted.commit();
+			if(Yana.eventstate==false){
+				context.startService(Yana.mEventService);
+				Rep="Les événements sont maintenant activés.";}
+			else{Rep="Les événements sont déjà activés.";}
+			return true;}
+		
+		
+		return false;
+	}
+	
+	public static void Add_Commandes(){
+		int i=0;
+		
+		Commandes.add(i, "YANA, montre-toi.");
+		Liens.add(i, "");
+		Confidences.add(i, "0.7");
+		i++;
+		
+		Commandes.add(i, "YANA, cache-toi.");
+		Liens.add(i, "");
+		Confidences.add(i, "0.7");
+		i++;
+		
+		Commandes.add(i, "YANA, active les événements.");
+		Liens.add(i, "");
+		Confidences.add(i, "0.7");
+		i++;
+		
+		Commandes.add(i, "YANA, désactive les événements.");
+		Liens.add(i, "");
+		Confidences.add(i, "0.7");
+		i++;
+		
+		Reco_spec.add("     ");
+		Reco_bool.add(false);
+		Reco_add.add(false);
 	}
 	
 }

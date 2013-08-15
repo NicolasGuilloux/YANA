@@ -72,16 +72,19 @@ public class ShakeService extends Service implements TextToSpeech.OnInitListener
  	Intent NewRecrep = new Intent("NewRecrep"); 
  	Intent NewRep = new Intent("NewRep");
  	Intent Post_speech = new Intent("Post_speech");
- 	Context context;
+ 	static Context context;
  	
  		// Valeur de retour de la Comparaison
  	int n=-1;
  	
  	final BroadcastReceiver mReceiver = new ScreenReceiver();
+ 	
+ 	public static void Finish(){((Service) context).stopSelf();}
 	
 	public void onCreate(){
     	super.onCreate();
     	
+    	context = getApplicationContext();
     	Yana.servstate=true; // Définit l'état du service pour Yana
         
     	mSensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE); // Définit tous les attributs du Shake
@@ -153,8 +156,6 @@ public class ShakeService extends Service implements TextToSpeech.OnInitListener
 			}
 		else{fin();} // Sinon il remet tout à 0
 	}
-	
-	
 
 	public void getTTS(){mTts = new TextToSpeech(this, this);} // Initialise le TTS
 
@@ -230,44 +231,36 @@ public class ShakeService extends Service implements TextToSpeech.OnInitListener
 		Log.d(TAG,"Numéro sortant : " + n);
 		if(n<0){ // Si échec, Ordre=Resultat
 			Ordre=Resultat;
-			A_dire="Aucun ordre ne semble être identifié au votre.";} 
+			A_dire="Aucun ordre ne semble être identifié au votre.";}
 		else{ // Sinon...
-			Ordre = Traitement.Commandes.get(n); // Ordre prend la valeur de la commande choisie
-			if(n==0){ // Si le repère est égal à 0
-				SharedPreferences.Editor geted = PreferenceManager.getDefaultSharedPreferences(this).edit();
-	    		geted.putBoolean("shake", false); // Il va mettre la box dans les options décochée
-	    		geted.commit();
-	    		if(Yana.servstate==true){ // Il va arrêter le service s'il est lancé.
-	    			A_dire="Le ShakeService est maintenant désactivé.";}
-	    		else{A_dire="Votre service est déjà désactivé.";}}}
+			Ordre = Traitement.Commandes.get(n);} // Ordre prend la valeur de la commande choisie
 	 	
 		NewRecrep.putExtra("contenu", Ordre); // Envoie l'ordre à l'interface
 	 	LocalBroadcastManager.getInstance(this).sendBroadcast(NewRecrep);
 	 	
 	 	if(n>0){ // Si l'ordre est valable
-	    	URL = Traitement.Liens.get(n);
-	    	
-	    	ConnectivityManager cm = (ConnectivityManager) getApplicationContext()
-                    .getSystemService(Context.CONNECTIVITY_SERVICE);
-     
-            NetworkInfo activeNetwork = cm.getActiveNetworkInfo();
-            
-	    	if(activeNetwork!=null){ // Vérifie le réseau
-	    		A_dire = Traitement.HTTP_Contact("http://"+IPadress+"?"+URL+"&token="+Token);} // Envoie au RPi et enregistre sa réponse
-        	else{
-        		Toast toast= Toast.makeText(getApplicationContext(), // En cas d'échec, il prévient l'utilisateur
-    			    	"Vous n'avez pas de connexion internet !", 4000);  
-    					toast.setGravity(Gravity.TOP|Gravity.CENTER_HORIZONTAL, 0, 80);
-    					toast.show();}}
-		
-		while(A_dire==""){android.os.SystemClock.sleep(1000);} // Attend que A_dire soit bien remplie
+	 		if(Traitement.Verif_aux(Ordre,context)) A_dire=Traitement.Rep;
+	 		else{
+		    	URL = Traitement.Liens.get(n);
+		    	
+		    	ConnectivityManager cm = (ConnectivityManager) getApplicationContext()
+	                    .getSystemService(Context.CONNECTIVITY_SERVICE);
+	     
+	            NetworkInfo activeNetwork = cm.getActiveNetworkInfo();
+	            
+		    	if(activeNetwork!=null){ // Vérifie le réseau
+		    		A_dire = Traitement.HTTP_Contact("http://"+IPadress+"?"+URL+"&token="+Token);} // Envoie au RPi et enregistre sa réponse
+	        	else{
+	        		Toast toast= Toast.makeText(getApplicationContext(), // En cas d'échec, il prévient l'utilisateur
+	    			    	"Vous n'avez pas de connexion internet !", 4000);  
+	    					toast.setGravity(Gravity.TOP|Gravity.CENTER_HORIZONTAL, 0, 80);
+	    					toast.show();}}}
 		
 		if(A_dire.compareTo("")!=0){
 			NewRep.putExtra("contenu", A_dire); // Envoie de la réponse à l'interface
 		 	LocalBroadcastManager.getInstance(this).sendBroadcast(NewRep);}
 		else{A_dire=" ";}
-		getTTS();
-		}
+		getTTS();}
     																													
     @Override
     public void onRecognizerStateChanged(RecognizerState state) {

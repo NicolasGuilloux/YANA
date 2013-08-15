@@ -36,7 +36,6 @@ import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.EditText;
-import android.widget.ExpandableListView;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.ListView;
@@ -47,12 +46,10 @@ import android.widget.Toast;
 import android.widget.AdapterView.OnItemClickListener;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Locale;
 import java.util.Random;
 
 import fr.nover.yana.assistant_installation.Assistant_Installation;
-import fr.nover.yana.passerelles.ExpandableListAdapter;
 import fr.nover.yana.passerelles.Traitement;
 import fr.nover.yana.passerelles.ShakeDetector;
 
@@ -73,8 +70,8 @@ public class Yana extends Activity implements TextToSpeech.OnInitListener{
     static boolean testTTS = false, testMAJ = false, AI, TTS_TEST, Commande_actu=false;
 	    
     	// A propos du Service (Intent pour le lancer et servstate pour savoir l'état du service)
-	private Intent ShakeService;
-	public static boolean servstate=false;
+	public static Intent mShakeService,mEventService;
+	public static boolean servstate=false, eventstate=false;
 	boolean Box_TTS, Box_TTS_presence;
 	
 	String Token="";
@@ -85,11 +82,6 @@ public class Yana extends Activity implements TextToSpeech.OnInitListener{
 	int n=1;
 	boolean update;
 	Handler myHandler = new Handler();
-	
-	ExpandableListAdapter listAdapter;
-    ExpandableListView expListView;
-    ArrayList<String> listDataHeader;
-    HashMap<String, ArrayList<String>> listDataChild;
 	
 		// S'il reçoit un signal Broadcast du Service, il réagit en conséquence
 	private BroadcastReceiver NewRecrep = new BroadcastReceiver() { 
@@ -133,7 +125,7 @@ public class Yana extends Activity implements TextToSpeech.OnInitListener{
     	getConfig(); // Actualise la configuration
     	if(!Commande_actu){Commandes_actu();}
     	if(update){Commandes_actu();} // Actualise les commandes si la config correspond
-    		
+
     	ip_adress.setOnClickListener(new View.OnClickListener() { // Lance la configuration si on clique sur l'image à côté de l'adresse IP
     		@Override
     		public void onClick(View v){
@@ -255,7 +247,7 @@ public class Yana extends Activity implements TextToSpeech.OnInitListener{
     		tts_pref_false.setText("");}
     	
     	bienvenue=preferences.getBoolean("bienvenue", true);
-    	
+
     	update=preferences.getBoolean("update", false);
     	
     	Token=preferences.getString("token", "");
@@ -265,13 +257,18 @@ public class Yana extends Activity implements TextToSpeech.OnInitListener{
 		Sexe=preferences.getString("sexe", "");
 		Pseudo=preferences.getString("nickname", "");
     		
-    	ShakeService=new Intent(Yana.this, ShakeService.class); // Démarre le service en fonction de l'état de la box
-    	boolean Box_shake=preferences.getBoolean("shake", true);
-    	if((Box_shake==true) && servstate==false){startService(ShakeService);}
-    	else if((Box_shake==false) && servstate==true){stopService(ShakeService);}
-    	else { // Réactualise les variables au cas où on passe d'une reco en continu à une reco par Shake
-    		stopService(ShakeService);
-    		startService(ShakeService);}
+    	mShakeService=new Intent(Yana.this, ShakeService.class); // Démarre le service en fonction de l'état de la box
+    	boolean Box_shake=preferences.getBoolean("shake", false);
+    	if((Box_shake==true) && servstate==false){startService(mShakeService);}
+    	else if((Box_shake==false) && servstate==true){ShakeService.Finish();}
+    	else if((Box_shake==true) && servstate==true){ // Réactualise les variables au cas où on passe d'une reco en continu à une reco par Shake
+    		ShakeService.Finish();
+    		startService(mShakeService);}
+    	
+    	mEventService=new Intent(Yana.this, EventService.class); // Démarre le service en fonction de l'état de la box
+    	boolean Box_Event=preferences.getBoolean("event", false);
+    	if((Box_Event==true) && eventstate==false){startService(mEventService);}
+    	else if((Box_Event==false) && eventstate==true){EventService.Finish();}
     	
     	Traitement.Voice_Sens = Double.parseDouble(preferences.getString("Voice_sens", "3.0"))* Math.pow(10.0,-2.0); // Importe la sensibilité de la comparaison des chaines de caractères
     	if (Traitement.Voice_Sens>=1){
@@ -282,7 +279,8 @@ public class Yana extends Activity implements TextToSpeech.OnInitListener{
     	
     	float Shake_sens=Float.parseFloat(preferences.getString("shake_sens", "3.0f")); // Importe la sensibilité du Shake
 		ShakeDetector.getConfig(Shake_sens);
-		Log.d("End of Config","");}
+
+		Log.d("End of Config","End Of Config");}
         
     void Initialisation(){ // Initialise le processus
         Intent intent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
@@ -348,6 +346,7 @@ public class Yana extends Activity implements TextToSpeech.OnInitListener{
     
 	void Commandes_Layout(){ // Ici, on va inscrire les commandes sur le panel
     	
+		Log.d("Commandes_Layout","Commandes_layout");
     	ListView Commandes_List =(ListView) findViewById(R.id.commandes_layout);
 		ArrayAdapter<String> modeAdapter = new ArrayAdapter<String>(this, R.drawable.command_list, Traitement.Commandes);
 		Commandes_List.setAdapter(modeAdapter);
@@ -363,9 +362,8 @@ public class Yana extends Activity implements TextToSpeech.OnInitListener{
                 .getSystemService(Context.CONNECTIVITY_SERVICE);
  
         NetworkInfo activeNetwork = cm.getActiveNetworkInfo();
-
 		
-    	if(!Commande_actu && Token.compareTo("")!=0){
+    	if(Commande_actu && Token.compareTo("")!=0){
     		if(activeNetwork!=null){
 		    	if(Traitement.pick_JSON(IPadress.getText().toString(), Token)){ // Commence le protocole de reception et les enregistre dans une ArrayList
 		    		Toast toast= Toast.makeText(getApplicationContext(), 
@@ -396,9 +394,7 @@ public class Yana extends Activity implements TextToSpeech.OnInitListener{
     		toast.setGravity(Gravity.TOP|Gravity.CENTER_HORIZONTAL, 0, 80);
     		toast.show();
     		
-    		Traitement.Commandes.add(0, "YANA, cache-toi.");
-			Traitement.Liens.add(0, "");
-			Traitement.Confidences.add(0, "0.7");
+    		Traitement.Add_Commandes();
 			
     		Traitement.Commandes.add("Vous n'avez pas entré le Token. L'application ne peut pas communiquer avec votre Raspberry Pi.");
     		Traitement.Liens.add("");
@@ -410,9 +406,7 @@ public class Yana extends Activity implements TextToSpeech.OnInitListener{
     		Traitement.Liens.clear();
     		Traitement.Confidences.clear();
     		
-    		Traitement.Commandes.add(0, "YANA, cache-toi.");
-			Traitement.Liens.add(0, "");
-			Traitement.Confidences.add(0, "0.7");
+    		Traitement.Add_Commandes();
 			
     		Traitement.Commandes.add("Vous n'avez pas encore actualisé vos commandes.");
     		Traitement.Liens.add("");
@@ -435,16 +429,8 @@ public class Yana extends Activity implements TextToSpeech.OnInitListener{
     	Rep="";
     	Log.d("Reco_invalide",""+Traitement.reco_invalide);
     	  
-    	if(Ordre.compareTo(Traitement.Commandes.get(0))==0){ // Vérification du "Yana, cache-toi"
-    		SharedPreferences.Editor geted = PreferenceManager.getDefaultSharedPreferences(this).edit();
-    		geted.putBoolean("shake", false);
-    		geted.commit();
-    		if(servstate==true){
-    			stopService(ShakeService);
-    			Rep="Le ShakeService est maintenant désactivé.";}
-    		else{Rep="Votre service est déjà désactivé.";}
-    	}
-    	
+    	if(Traitement.Verif_aux(Ordre,this)){ // Vérification auxiliaire
+    		Rep = Traitement.Rep;}
     	else if(Ordre.compareTo(Recrep)==0 && !Traitement.reco_invalide){Rep="Aucun ordre ne semble être identifié au votre.";} // Si Ordre=Recrep alors c'est que la reconnaissance par pertinence a échoué
     	else if(Traitement.reco_invalide){Rep="Vous n'avez pas activé la reconaissance adaptée pour cette commande.";}
     	else{
