@@ -23,14 +23,15 @@ or to a theme attribute in the form "<code>?[<i>package</i>:][<i>type</i>:]<i>na
         public static final int click=0x7f060004;
         public static final int envoi=0x7f060000;
         public static final int recu=0x7f060001;
-        public static final int review_green=0x7f06000a;
-        public static final int step_pager_next_tab_color=0x7f060009;
-        public static final int step_pager_previous_tab_color=0x7f060006;
-        public static final int step_pager_selected_last_tab_color=0x7f060008;
-        public static final int step_pager_selected_tab_color=0x7f060007;
-        public static final int text_light=0x7f06000b;
+        public static final int review_green=0x7f06000b;
+        public static final int step_pager_next_tab_color=0x7f06000a;
+        public static final int step_pager_previous_tab_color=0x7f060007;
+        public static final int step_pager_selected_last_tab_color=0x7f060009;
+        public static final int step_pager_selected_tab_color=0x7f060008;
+        public static final int text_light=0x7f06000c;
         public static final int theme=0x7f060002;
         public static final int theme_icon=0x7f060003;
+        public static final int white=0x7f060006;
     }
     public static final class dimen {
         /**  Default screen margins, per the Android Design guidelines. 
@@ -58,34 +59,36 @@ or to a theme attribute in the form "<code>?[<i>package</i>:][<i>type</i>:]<i>na
         public static final int selectable_item_background=0x7f02000d;
     }
     public static final class id {
-        public static final int Btnconfiguration=0x7f0c001e;
+        public static final int Btnconfiguration=0x7f0c0020;
+        public static final int ExpLV=0x7f0c0015;
         public static final int IPadress=0x7f0c000d;
         public static final int SSID=0x7f0c0009;
-        public static final int Yana=0x7f0c0018;
+        public static final int Yana=0x7f0c001a;
         public static final int btnRec=0x7f0c000f;
-        public static final int commandes_layout=0x7f0c0013;
+        public static final int commandes_layout=0x7f0c0016;
+        public static final int contenu=0x7f0c0013;
         public static final int conversation=0x7f0c0011;
         public static final int conversation_scroll=0x7f0c0010;
         public static final int divider=0x7f0c0002;
         public static final int drawer=0x7f0c0012;
         public static final int handle=0x7f0c0014;
         public static final int ip_adress=0x7f0c000c;
-        public static final int ipadress_conf=0x7f0c001a;
+        public static final int ipadress_conf=0x7f0c001c;
         public static final int ipadress_ext=0x7f0c000a;
         public static final int ipadress_int=0x7f0c0008;
         public static final int layout_interface=0x7f0c000b;
-        public static final int lblListHeader=0x7f0c001b;
-        public static final int lblListItem=0x7f0c001c;
-        public static final int merci=0x7f0c0015;
+        public static final int lblListHeader=0x7f0c001d;
+        public static final int lblListItem=0x7f0c001e;
+        public static final int merci=0x7f0c0017;
         public static final int next_button=0x7f0c0004;
         public static final int pager=0x7f0c0001;
         public static final int prev_button=0x7f0c0003;
-        public static final int slideview=0x7f0c0016;
+        public static final int slideview=0x7f0c0018;
         public static final int strip=0x7f0c0000;
-        public static final int text=0x7f0c0019;
-        public static final int toast_layout_root=0x7f0c0017;
+        public static final int text=0x7f0c001b;
+        public static final int toast_layout_root=0x7f0c0019;
         public static final int tts_pref_false=0x7f0c000e;
-        public static final int updateCom=0x7f0c001d;
+        public static final int updateCom=0x7f0c001f;
         public static final int your_name=0x7f0c0005;
         public static final int your_nickname=0x7f0c0007;
         public static final int your_surname=0x7f0c0006;

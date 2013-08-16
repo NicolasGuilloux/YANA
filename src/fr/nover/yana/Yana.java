@@ -36,6 +36,8 @@ import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.EditText;
+import android.widget.ExpandableListView;
+import android.widget.ExpandableListView.OnChildClickListener;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.ListView;
@@ -52,6 +54,7 @@ import java.util.Random;
 import fr.nover.yana.assistant_installation.Assistant_Installation;
 import fr.nover.yana.passerelles.Traitement;
 import fr.nover.yana.passerelles.ShakeDetector;
+import fr.nover.yana.passerelles.ExpandableListAdapter;
 
 public class Yana extends Activity implements TextToSpeech.OnInitListener{
 	
@@ -67,12 +70,12 @@ public class Yana extends Activity implements TextToSpeech.OnInitListener{
 		
     private TextToSpeech mTts;// Déclare le TTS
     
-    static boolean testTTS = false, testMAJ = false, AI, TTS_TEST, Commande_actu=false;
+    static boolean testTTS = false, AI, Commande_actu=false;
 	    
     	// A propos du Service (Intent pour le lancer et servstate pour savoir l'état du service)
 	public static Intent mShakeService,mEventService;
 	public static boolean servstate=false, eventstate=false;
-	boolean Box_TTS, Box_TTS_presence;
+	boolean Box_TTS;
 	
 	String Token="";
 	
@@ -82,6 +85,8 @@ public class Yana extends Activity implements TextToSpeech.OnInitListener{
 	int n=1;
 	boolean update;
 	Handler myHandler = new Handler();
+	
+    ExpandableListView expListView;
 	
 		// S'il reçoit un signal Broadcast du Service, il réagit en conséquence
 	private BroadcastReceiver NewRecrep = new BroadcastReceiver() { 
@@ -114,6 +119,7 @@ public class Yana extends Activity implements TextToSpeech.OnInitListener{
     	tts_pref_false = (TextView) findViewById(R.id.tts_pref_false);
     	btnRec = (ImageButton) findViewById(R.id.btnRec);
     	ip_adress = (ImageView) findViewById(R.id.ip_adress);
+    	expListView = (ExpandableListView) findViewById(R.id.ExpLV);
     	
     	StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build(); // Empêche un bug de contact avec le RPi (je ne sais pas pourquoi :))
     	StrictMode.setThreadPolicy(policy);
@@ -345,16 +351,30 @@ public class Yana extends Activity implements TextToSpeech.OnInitListener{
     	}
     
 	void Commandes_Layout(){ // Ici, on va inscrire les commandes sur le panel
+		
+		ExpandableListAdapter listAdapter = new ExpandableListAdapter(this, Traitement.Categories, Traitement.listDataChild);
+        expListView.setAdapter(listAdapter);
+        
+        expListView.setOnChildClickListener(new OnChildClickListener() {
+			@Override
+			public boolean onChildClick(ExpandableListView parent, View v, int groupPosition, int childPosition, long itemID) {
+    	    	int ID=(int)itemID;
+    	    	int i=0;
+    	    	ArrayList<String> Reco = Traitement.listDataChild.get(Traitement.Categories.get(groupPosition));
+    	    	i = Traitement.Comparaison(Reco.get(ID));
+				Prétraitement(Traitement.Commandes.get(i), Traitement.Liens.get(i));
+    	    	return false;}
+			});
     	
-		Log.d("Commandes_Layout","Commandes_layout");
     	ListView Commandes_List =(ListView) findViewById(R.id.commandes_layout);
-		ArrayAdapter<String> modeAdapter = new ArrayAdapter<String>(this, R.drawable.command_list, Traitement.Commandes);
+		ArrayAdapter<String> modeAdapter = new ArrayAdapter<String>(this, R.drawable.command_list, Traitement.Commandes_a);
 		Commandes_List.setAdapter(modeAdapter);
 	        
 		Commandes_List.setOnItemClickListener(new OnItemClickListener() {
     	    public void onItemClick(AdapterView<?> arg0, View view, int arg2,long itemID) {
     	    	int ID=(int)itemID;
-    	    	Prétraitement(Traitement.Commandes.get(ID), Traitement.Liens.get(ID)); }
+    	    	int n = Traitement.Comparaison(Traitement.Commandes_a.get(ID));
+				Prétraitement(Traitement.Commandes.get(n), Traitement.Liens.get(n));}
 			});}
 
     void Commandes_actu(){ // Ici on va actualiser la liste des commandes
@@ -427,12 +447,9 @@ public class Yana extends Activity implements TextToSpeech.OnInitListener{
     
     void Prétraitement2 (String Ordre, String URL){ // Deuxième partie du Prétraitement (MyHandler l'oblige pour afficher l'ordre avant le traitement)
     	Rep="";
-    	Log.d("Reco_invalide",""+Traitement.reco_invalide);
     	  
-    	if(Traitement.Verif_aux(Ordre,this)){ // Vérification auxiliaire
-    		Rep = Traitement.Rep;}
-    	else if(Ordre.compareTo(Recrep)==0 && !Traitement.reco_invalide){Rep="Aucun ordre ne semble être identifié au votre.";} // Si Ordre=Recrep alors c'est que la reconnaissance par pertinence a échoué
-    	else if(Traitement.reco_invalide){Rep="Vous n'avez pas activé la reconaissance adaptée pour cette commande.";}
+    	if(Traitement.Verif_aux(Ordre,this)) Rep = Traitement.Rep;  // Vérification auxiliaire
+    	else if(Ordre.compareTo(Recrep)==0) Rep="Aucun ordre ne semble être identifié au votre."; // Si Ordre=Recrep alors c'est que la reconnaissance par pertinence a échoué
     	else{
     		ConnectivityManager cm = (ConnectivityManager) getApplicationContext()
                     .getSystemService(Context.CONNECTIVITY_SERVICE);
@@ -477,5 +494,6 @@ public class Yana extends Activity implements TextToSpeech.OnInitListener{
         String Retour = list.get(randomInt).toString();
 		
 		return Retour;}
+
 
 }

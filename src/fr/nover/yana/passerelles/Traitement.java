@@ -8,6 +8,8 @@
 package fr.nover.yana.passerelles;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.StringTokenizer;
 
 import org.json.JSONArray;
@@ -35,29 +37,28 @@ public class Traitement {
 	
  	private static final String TAG=""; // Logger tag
  	public static double Voice_Sens; // Sensibilité de la comparaison entre ordres et commandes
- 	static public String URL="", XBMC, Rep;
- 	static public boolean reco_invalide, Sons;
+ 	static public String URL="", Rep;
+ 	static public boolean Sons;
  	
  		// Déclare les ArraList utilisées pour stocker les éléments de commandes
  	public static ArrayList<String> Commandes = new ArrayList<String>();
  	public static ArrayList<String> Liens = new ArrayList<String>();
  	public static ArrayList<String> Confidences = new ArrayList<String>();
  	
- 	public static ArrayList<String> Reco_spec = new ArrayList<String>();
- 	public static ArrayList<Boolean> Reco_bool = new ArrayList<Boolean>();
- 	public static ArrayList<Boolean> Reco_add = new ArrayList<Boolean>(); 	
+ 	public static ArrayList<String> Categories = new ArrayList<String>();
+    public static ArrayList<String> Identifiant_cat = new ArrayList<String>();
+ 	
+    public static HashMap<String, ArrayList<String>> listDataChild;
+    public static ArrayList<String> Commandes_a = new ArrayList<String>();
  	
  	static boolean retour; // Déclare le retour pour la passerelles JsonParser
  	
  	static JSONObject json;
-	
+
 	public static int Comparaison(String Enregistrement){ // Processus de comparaison pour faire une reconnaissance par pertinence
 		int n=-1;
 		double c=0,co;
-		reco_invalide=false;
 		try{
-			Log.d("Reco_spec",""+Reco_spec.get(0));
-			Log.d("Reco_bool",""+Reco_bool.get(0));
 			for (int i = 0; i < Commandes.size(); i++){
 				co=LevenshteinDistance.similarity(Enregistrement, Commandes.get(i));
 				if(co>c && co>Double.parseDouble(Confidences.get(i))-Voice_Sens){
@@ -66,57 +67,37 @@ public class Traitement {
 		}}
 		catch(Exception e){Log.e("log_tag", "Erreur pour la comparaison : "+e.toString());}
 		if(c<Voice_Sens){n=-1;} // Compare en fonction de la sensibilité (cf option)
-		for (int y = 0; y < Reco_spec.size(); y++){
-			Log.d("",""+Reco_spec.get(y));
-			if(n>0){
-			if(Liens.get(n).contains(Reco_spec.get(y).toLowerCase())){
-				if(!Reco_bool.get(y)){
-					Log.d("Non choisi !","Il n'y a pas d'activer le reco "+Reco_spec.get(y));
-					reco_invalide=true;}}}}
 		return n;} // Retourne le résultat
 	
 	public static String HTTP_Contact(String URL, Context context){
 		Log.d("Echange avec le serveur",""+URL);
-		boolean Action_done=false;
 		
-		for (int y = 0; y < Reco_spec.size(); y++){
-			if(URL.contains(Reco_spec.get(y))){
-				Action_done=true;
-				if(URL.contains("disable")){
-					Reco_bool.set(y, false);
-					Reponse="La reconnaissance "+Reco_spec.get(y)+" est maintenant désactivée.";}
-				else{
-					Reco_bool.set(y, true);
-					Reponse="La reconnaissance "+Reco_spec.get(y)+" est maintenant activée.";}
-			}}
-		
-	    if(!Action_done){
-		    JsonParser jParser = new JsonParser ();
-		    try{json = jParser.getJSONFromUrl(URL);}
-		    catch(Exception e){Log.d("Echec du contact","Le server n'a pas pu être contacté");}
+		JsonParser jParser = new JsonParser ();
+		try{json = jParser.getJSONFromUrl(URL);}
+		catch(Exception e){Log.d("Echec du contact","Le server n'a pas pu être contacté");}
 		    	
-		    try{JSONArray commands = json.getJSONArray("responses");
-				JSONObject Rep = commands.getJSONObject(0); // Importe la première valeur
-				String type = Rep.getString("type");
+		try{JSONArray commands = json.getJSONArray("responses");
+			JSONObject Rep = commands.getJSONObject(0); // Importe la première valeur
+			String type = Rep.getString("type");
 				
-				if(type.compareTo("talk")==0){
-					Reponse=Rep.getString("sentence");}
+			if(type.compareTo("talk")==0){
+				Reponse=Rep.getString("sentence");}
+			
+			else if (Rep.getString("type").compareTo("sound")==0){
+				String Son = Rep.getString("file");
+				Son = Son.replace(".wav","");
+				Reponse="*"+Son+"*";
+				Media_Player(Son, context);}
 				
+			for (int i = 1; i < commands.length(); i++) { // Importe les autres valeurs s'il y en a
+				JSONObject emp = commands.getJSONObject(i);
+				if("talk".compareTo(emp.getString("type"))==0){
+					Reponse=Reponse+" \n"+emp.getString("sentence");}
 				else if (Rep.getString("type").compareTo("sound")==0){
-					String Son = Rep.getString("file");
+					String Son = emp.getString("file");
 					Son = Son.replace(".wav","");
-					Reponse="*"+Son+"*";
-					Media_Player(Son, context);}
-				
-				for (int i = 1; i < commands.length(); i++) { // Importe les autres valeurs s'il y en a
-					JSONObject emp = commands.getJSONObject(i);
-					if("talk".compareTo(emp.getString("type"))==0){
-						Reponse=Reponse+" \n"+emp.getString("sentence");}
-					else if (Rep.getString("type").compareTo("sound")==0){
-						String Son = emp.getString("file");
-						Son = Son.replace(".wav","");
-						Reponse=Reponse+" \n"+"*"+Son+"*";
-						Media_Player(Son, context);}	
+					Reponse=Reponse+" \n"+"*"+Son+"*";
+					Media_Player(Son, context);}	
 				}
 			}
 			catch(JSONException e){e.printStackTrace();}
@@ -128,8 +109,10 @@ public class Traitement {
 				catch(JSONException x){e.printStackTrace();}
 				catch(Exception x){
 					Reponse="Il y a eu une erreur lors du contact avec le Raspberry Pi.";}
-				}}
-	    	
+				}
+
+		Reponse = Reponse.replace("&#039;", "'");
+		Reponse = Reponse.replace("eteint", "éteint");
     	return Reponse;}
 	
 	public static boolean pick_JSON(String IPadress, String Token){
@@ -139,13 +122,11 @@ public class Traitement {
 		Liens.clear();
 		Confidences.clear();
 		
-		Reco_spec.clear();
-		Reco_bool.clear();
-		Reco_add.clear();
+		Categories.clear();
+		Identifiant_cat.clear();
 		
-		Reco_spec.add("XBMC");
-		Reco_bool.add(false);
-		Reco_add.add(false);
+        listDataChild = new HashMap<String, ArrayList<String>>();
+	 	Commandes_a.clear();
 
 	 	JsonParser jParser = new JsonParser ();
 	 	try{json = jParser.getJSONFromUrl("http://"+IPadress+"?action=GET_SPEECH_COMMAND&token="+Token);}
@@ -166,21 +147,11 @@ public class Traitement {
 					tokens.nextToken();
 					URL = tokens.nextToken();
 					
-					for (int y = 0; y < Reco_spec.size(); y++){
-						if(URL.contains(Reco_spec.get(y).toLowerCase()) && !Reco_add.get(y)){						
-							Commandes.add("YANA, active la reco "+Reco_spec.get(y));
-							Liens.add(Reco_spec.get(y)+"_able");
-							Confidences.add("0.7");
-							
-							Commandes.add("YANA, désactive la reco "+Reco_spec.get(y));
-							Liens.add(Reco_spec.get(y)+"_disable");
-							Confidences.add("0.7");
-							
-							Reco_add.set(y, true);}}
-					
+					if(!URL.contains("vocalinfo_devmod")){
 						Commandes.add(Command);
 						Liens.add(URL);
 						Confidences.add(emp.getString("confidence"));}
+				}
 			}
 		
 		 	catch(JSONException e){
@@ -189,13 +160,36 @@ public class Traitement {
 		 	
 			catch(Exception e){
 				Verification_erreur();
-				retour=false;}}
+				retour=false;}
+
+		 	Add_Commandes();
+		 	
+		 	ArrayList<String> Links = new ArrayList<String>(Liens);
+		 	Commandes_a = new ArrayList<String>(Commandes);
+		 	
+		 	for (int y=0; y<Categories.size()-1; y++){
+		 		boolean add=false;
+		 		ArrayList<String> Reco = new ArrayList<String>();
+		 		for(int i=Commandes_a.size()-1; i>=0; i--){
+					if(Links.get(i).toLowerCase().contains(Identifiant_cat.get(y).toLowerCase()) || Commandes_a.get(i).toLowerCase().contains(Identifiant_cat.get(y).toLowerCase())){
+						Reco.add(Commandes_a.get(i));
+						Commandes_a.remove(i);
+						Links.remove(i);
+						add=true;}
+				}
+		 		if(add){
+		 			Collections.reverse(Reco); 
+		 			listDataChild.put(Categories.get(y), Reco);}
+		 		else{ 
+		 			Categories.remove(y); 
+		 			y--;}
+		 	}
+	 	}
 	 	else{
 	 		Liens.add("");
 			Confidences.add("");
 	 		Commandes.add("Echec du contact avec le serveur. Veuillez vérifier votre système et l'adresse entrée.");}
 		
-	 	Add_Commandes();
 		return retour;}
 	
 	static void Verification_erreur(){
@@ -280,7 +274,6 @@ public class Traitement {
 			else{Rep="Les événements sont déjà activés.";}
 			return true;}
 		
-		
 		return false;
 	}
 	
@@ -307,10 +300,17 @@ public class Traitement {
 		Confidences.add(i, "0.7");
 		i++;
 		
-		Reco_spec.add("     ");
-		Reco_bool.add(false);
-		Reco_add.add(false);
-	}
+		Categories.add("XBMC");
+		Identifiant_cat.add("XBMC");
+		
+		Categories.add("Sons");
+		Identifiant_cat.add("vocalinfo_sound");
+		
+		Categories.add("Relais radio");
+		Identifiant_cat.add("radioRelay_change_state");
+		
+		Categories.add("Ceci est ajouté uniquement pour éviter de faire des erreurs (car l'ArrayList serait vide)");
+		Identifiant_cat.add("Ceci est ajouté uniquement pour éviter de faire des erreurs (car l'ArrayList serait vide)");}
 	
 	public static void Media_Player(String Son, Context context){
 		Sons = true;
