@@ -66,6 +66,8 @@ public class Traitement {
 					n=i;}
 		}}
 		catch(Exception e){Log.e("log_tag", "Erreur pour la comparaison : "+e.toString());}
+		Log.d("Avant Check_VoiceSens", "c="+Voice_Sens);
+		Log.d("Avant Check_VoiceSens", "n="+n);
 		if(c<Voice_Sens){n=-1;} // Compare en fonction de la sensibilité (cf option)
 		return n;} // Retourne le résultat
 	
@@ -162,25 +164,25 @@ public class Traitement {
 				Verification_erreur();
 				retour=false;}
 
-		 	Add_Commandes();
+		 	Add_Commandes(true);
 		 	
 		 	ArrayList<String> Links = new ArrayList<String>(Liens);
 		 	Commandes_a = new ArrayList<String>(Commandes);
 		 	
 		 	for (int y=0; y<Categories.size()-1; y++){
-		 		boolean add=false;
 		 		ArrayList<String> Reco = new ArrayList<String>();
 		 		for(int i=Commandes_a.size()-1; i>=0; i--){
 					if(Links.get(i).toLowerCase().contains(Identifiant_cat.get(y).toLowerCase()) || Commandes_a.get(i).toLowerCase().contains(Identifiant_cat.get(y).toLowerCase())){
 						Reco.add(Commandes_a.get(i));
 						Commandes_a.remove(i);
-						Links.remove(i);
-						add=true;}
+						Links.remove(i);}
 				}
-		 		if(add){
+	 			Log.d("Reco","Reco : "+Reco);
+		 		if(Reco.size()>0){
 		 			Collections.reverse(Reco); 
 		 			listDataChild.put(Categories.get(y), Reco);}
 		 		else{ 
+		 			Log.d("Remove","Remove : "+Categories.get(y));
 		 			Categories.remove(y); 
 		 			y--;}
 		 	}
@@ -277,7 +279,7 @@ public class Traitement {
 		return false;
 	}
 	
-	public static void Add_Commandes(){
+	public static void Add_Commandes(boolean Full){
 		int i=0;
 		
 		Commandes.add(i, "YANA, montre-toi.");
@@ -300,14 +302,15 @@ public class Traitement {
 		Confidences.add(i, "0.7");
 		i++;
 		
-		Categories.add("XBMC");
-		Identifiant_cat.add("XBMC");
-		
-		Categories.add("Sons");
-		Identifiant_cat.add("vocalinfo_sound");
-		
-		Categories.add("Relais radio");
-		Identifiant_cat.add("radioRelay_change_state");
+		if(Full){
+			Categories.add("XBMC");
+			Identifiant_cat.add("XBMC");
+			
+			Categories.add("Sons");
+			Identifiant_cat.add("vocalinfo_sound");
+			
+			Categories.add("Relais radio");
+			Identifiant_cat.add("radioRelay_change_state");}
 		
 		Categories.add("Ceci est ajouté uniquement pour éviter de faire des erreurs (car l'ArrayList serait vide)");
 		Identifiant_cat.add("Ceci est ajouté uniquement pour éviter de faire des erreurs (car l'ArrayList serait vide)");}

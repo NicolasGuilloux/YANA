@@ -352,19 +352,19 @@ public class Yana extends Activity implements TextToSpeech.OnInitListener{
     
 	void Commandes_Layout(){ // Ici, on va inscrire les commandes sur le panel
 		
-		ExpandableListAdapter listAdapter = new ExpandableListAdapter(this, Traitement.Categories, Traitement.listDataChild);
-        expListView.setAdapter(listAdapter);
-        
-        expListView.setOnChildClickListener(new OnChildClickListener() {
-			@Override
-			public boolean onChildClick(ExpandableListView parent, View v, int groupPosition, int childPosition, long itemID) {
-    	    	int ID=(int)itemID;
-    	    	int i=0;
-    	    	ArrayList<String> Reco = Traitement.listDataChild.get(Traitement.Categories.get(groupPosition));
-    	    	i = Traitement.Comparaison(Reco.get(ID));
-				Prétraitement(Traitement.Commandes.get(i), Traitement.Liens.get(i));
-    	    	return false;}
-			});
+		if(Traitement.Categories.size()>0){
+			ExpandableListAdapter listAdapter = new ExpandableListAdapter(this, Traitement.Categories, Traitement.listDataChild);
+	        expListView.setAdapter(listAdapter);
+	        
+	        expListView.setOnChildClickListener(new OnChildClickListener() {
+				@Override
+				public boolean onChildClick(ExpandableListView parent, View v, int groupPosition, int childPosition, long itemID) {
+	    	    	int ID=(int)itemID;
+	    	    	ArrayList<String> Reco = Traitement.listDataChild.get(Traitement.Categories.get(groupPosition));
+	    	    	int i = Traitement.Comparaison(Reco.get(ID));
+					Prétraitement(Traitement.Commandes.get(i), Traitement.Liens.get(i));
+	    	    	return false;}
+				});}
     	
     	ListView Commandes_List =(ListView) findViewById(R.id.commandes_layout);
 		ArrayAdapter<String> modeAdapter = new ArrayAdapter<String>(this, R.drawable.command_list, Traitement.Commandes_a);
@@ -373,8 +373,8 @@ public class Yana extends Activity implements TextToSpeech.OnInitListener{
 		Commandes_List.setOnItemClickListener(new OnItemClickListener() {
     	    public void onItemClick(AdapterView<?> arg0, View view, int arg2,long itemID) {
     	    	int ID=(int)itemID;
-    	    	int n = Traitement.Comparaison(Traitement.Commandes_a.get(ID));
-				Prétraitement(Traitement.Commandes.get(n), Traitement.Liens.get(n));}
+    	    	int i = Traitement.Comparaison(Traitement.Commandes_a.get(ID));
+				Prétraitement(Traitement.Commandes.get(i), Traitement.Liens.get(i));}
 			});}
 
     void Commandes_actu(){ // Ici on va actualiser la liste des commandes
@@ -409,16 +409,18 @@ public class Yana extends Activity implements TextToSpeech.OnInitListener{
     		Traitement.Liens.clear();
     		Traitement.Confidences.clear();
     		
-    		Traitement.Add_Commandes();
+    		Traitement.Add_Commandes(false);
 			
     		Traitement.Commandes.add("Vous n'avez pas entré le Token. L'application ne peut pas communiquer avec votre Raspberry Pi.");
     		Traitement.Liens.add("");
-    		Traitement.Confidences.add("");
+    		Traitement.Confidences.add("0.7");
     		
     		Toast toast= Toast.makeText(getApplicationContext(), // En cas d'échec, il prévient l'utilisateur
     		Traitement.Commandes.get(Traitement.Commandes.size()-1), 4000);  
     		toast.setGravity(Gravity.TOP|Gravity.CENTER_HORIZONTAL, 0, 80);
-    		toast.show();}
+    		toast.show();
+    		
+    		Traitement.Commandes_a = new ArrayList<String>(Traitement.Commandes);}
     	
     	else{
     		Commande_actu=true;
@@ -426,11 +428,13 @@ public class Yana extends Activity implements TextToSpeech.OnInitListener{
     		Traitement.Liens.clear();
     		Traitement.Confidences.clear();
     		
-    		Traitement.Add_Commandes();
+    		Traitement.Add_Commandes(false);
 			
     		Traitement.Commandes.add("Vous n'avez pas encore actualisé vos commandes.");
     		Traitement.Liens.add("");
-    		Traitement.Confidences.add("");}
+    		Traitement.Confidences.add("0.7");
+
+		 	Traitement.Commandes_a = new ArrayList<String>(Traitement.Commandes);}
     	
     	Commandes_Layout();}
     
@@ -449,6 +453,7 @@ public class Yana extends Activity implements TextToSpeech.OnInitListener{
     	Rep="";
     	  
     	if(Traitement.Verif_aux(Ordre,this)) Rep = Traitement.Rep;  // Vérification auxiliaire
+    	else if(URL.compareTo("")==0) Rep="";
     	else if(Ordre.compareTo(Recrep)==0) Rep="Aucun ordre ne semble être identifié au votre."; // Si Ordre=Recrep alors c'est que la reconnaissance par pertinence a échoué
     	else{
     		ConnectivityManager cm = (ConnectivityManager) getApplicationContext()
@@ -494,6 +499,5 @@ public class Yana extends Activity implements TextToSpeech.OnInitListener{
         String Retour = list.get(randomInt).toString();
 		
 		return Retour;}
-
 
 }
