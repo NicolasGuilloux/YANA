@@ -70,7 +70,7 @@ public class ExpandableListAdapter extends BaseExpandableListAdapter {
  
     @Override
     public int getGroupCount() {
-        return this._listDataHeader.size()-1; // -1 a cause du comblage par une fausse entrée
+        return this._listDataHeader.size();
     }
  
     @Override

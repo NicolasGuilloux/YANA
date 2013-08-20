@@ -101,8 +101,7 @@ public class EventService extends Service implements OnUtteranceCompletedListene
 			Contenu.add("Service des événements en route.");
 			Talk.add(true);}
 		
-		JsonParser jParser = new JsonParser ();
-		try{json = jParser.getJSONFromUrl("http://"+IPadress+"?action=GET_EVENT&token="+Token);}
+		try{json = new JsonParser().execute("http://"+IPadress+"?action=GET_EVENT&token="+Token).get();}
 	 	catch(Exception e){
 	 		Toast("Echec du contact avec le Raspberry Pi.");}
 	 	

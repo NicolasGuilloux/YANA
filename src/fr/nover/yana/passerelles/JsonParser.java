@@ -17,19 +17,15 @@ import org.apache.http.util.EntityUtils;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import android.os.AsyncTask;
 import android.util.Log;
 
-public class JsonParser extends DefaultHttpClient {
+public class JsonParser extends AsyncTask<String, Void, JSONObject> {
 
 	static JSONObject jObj = null;
 	static String json = "";
-	
-	// Constructeur de notre classe
-	public JsonParser() {}
-	
-	public JSONObject getJSONFromUrl(String URL) {
-	
-	// début de la requête http
+
+	protected JSONObject doInBackground(String... URL) {
 		try {
 			jObj=null;
 			
@@ -39,7 +35,7 @@ public class JsonParser extends DefaultHttpClient {
 
 			DefaultHttpClient httpClient = new DefaultHttpClient(httpParameters);
 			
-			HttpGet httpGet = new HttpGet(URL);
+			HttpGet httpGet = new HttpGet(URL[0]);
 			HttpResponse httpResponse = httpClient.execute(httpGet);
 			HttpEntity httpEntity = httpResponse.getEntity();
 			json = EntityUtils.toString(httpEntity).trim();
@@ -66,5 +62,7 @@ public class JsonParser extends DefaultHttpClient {
 		
 		// retourner un JSONObject
 		return jObj;}
+	
+	protected void onPostExecute(JSONObject json) {}
 
 } 

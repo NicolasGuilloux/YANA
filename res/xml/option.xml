@@ -173,7 +173,9 @@
 	                android:summary="Cliquez pour relancer l'assistant d'installation"/>
         
        </PreferenceCategory>
+       
        <PreferenceCategory />
+       
        <PreferenceCategory
 		    android:title="Category Title"
 	   		android:layout="@layout/merci"  />

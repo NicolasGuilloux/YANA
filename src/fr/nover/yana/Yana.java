@@ -189,6 +189,7 @@ public class Yana extends Activity implements TextToSpeech.OnInitListener{
 	}}
 
 	public void onInit(int i){ // S'exécute dès la création du mTts
+		try{
 			if(mTts.isLanguageAvailable(Locale.FRENCH)!=TextToSpeech.LANG_AVAILABLE && !testTTS){
 				new AlertDialog.Builder(this)
 		 	    .setTitle("Le TTS n'est pas en Français.")
@@ -209,7 +210,16 @@ public class Yana extends Activity implements TextToSpeech.OnInitListener{
 				mTts.setLanguage(Locale.FRENCH);
 				
 				mTts.speak(Rep,TextToSpeech.QUEUE_FLUSH, null); // Il dicte sa phrase
-			    Rep="";}} // Au cas où Rep reste le même à la prochaine déclaration du TTS
+			    Rep="";} // Au cas où Rep reste le même à la prochaine déclaration du TTS
+		}
+		catch(Exception e){
+			Toast t = Toast.makeText(getApplicationContext(),
+    				"Impossible de vérifier les langues de votre TTS. Yana va tout de même essayer de le lancer.",
+    				Toast.LENGTH_SHORT);
+    	        	t.show();
+    	        	mTts.speak(Rep,TextToSpeech.QUEUE_FLUSH, null); // Il dicte sa phrase
+    			    Rep="";}
+	}
 
 	public void onDestroy(){ // Quitte le TTS quand l'application se termine
 	    if (mTts != null){

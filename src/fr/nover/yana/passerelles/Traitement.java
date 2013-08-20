@@ -74,8 +74,7 @@ public class Traitement {
 	public static String HTTP_Contact(String URL, Context context){
 		Log.d("Echange avec le serveur",""+URL);
 		
-		JsonParser jParser = new JsonParser ();
-		try{json = jParser.getJSONFromUrl(URL);}
+		try{json = new JsonParser().execute(URL).get();}
 		catch(Exception e){Log.d("Echec du contact","Le server n'a pas pu être contacté");}
 		    	
 		try{JSONArray commands = json.getJSONArray("responses");
@@ -130,8 +129,7 @@ public class Traitement {
         listDataChild = new HashMap<String, ArrayList<String>>();
 	 	Commandes_a.clear();
 
-	 	JsonParser jParser = new JsonParser ();
-	 	try{json = jParser.getJSONFromUrl("http://"+IPadress+"?action=GET_SPEECH_COMMAND&token="+Token);}
+	 	try{json = new JsonParser().execute("http://"+IPadress+"?action=GET_SPEECH_COMMAND&token="+Token).get();}
 	 	catch(Exception e){}
 	 	
 	 	if(retour){
@@ -168,8 +166,9 @@ public class Traitement {
 		 	
 		 	ArrayList<String> Links = new ArrayList<String>(Liens);
 		 	Commandes_a = new ArrayList<String>(Commandes);
-		 	
-		 	for (int y=0; y<Categories.size()-1; y++){
+
+ 			 
+		 	for (int y=Categories.size()-1; y>=0; y--){
 		 		ArrayList<String> Reco = new ArrayList<String>();
 		 		for(int i=Commandes_a.size()-1; i>=0; i--){
 					if(Links.get(i).toLowerCase().contains(Identifiant_cat.get(y).toLowerCase()) || Commandes_a.get(i).toLowerCase().contains(Identifiant_cat.get(y).toLowerCase())){
@@ -183,8 +182,7 @@ public class Traitement {
 		 			listDataChild.put(Categories.get(y), Reco);}
 		 		else{ 
 		 			Log.d("Remove","Remove : "+Categories.get(y));
-		 			Categories.remove(y); 
-		 			y--;}
+		 			Categories.remove(y);}
 		 	}
 	 	}
 	 	else{
