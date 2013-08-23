@@ -16,6 +16,9 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
+import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager.NameNotFoundException;
+import android.content.res.Resources;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
@@ -47,6 +50,8 @@ import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.AdapterView.OnItemClickListener;
 
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Locale;
 import java.util.Random;
@@ -64,7 +69,7 @@ public class Yana extends Activity implements TextToSpeech.OnInitListener{
 	ImageView ip_adress; // Affichage et actions du bouton à côté de ip_adress
 	String Recrep="", Rep=""; // Déclare les variables correspondant aux divers éléments de la conversation avec le RPi
     String Nom, Prénom, Sexe, Pseudo; // Pour l'identité de l'utilisateur
-    boolean bienvenue;
+    boolean bienvenue, changelog=false;
     static boolean bienvenue_fait=false;
     Random random = new Random(); // Pour un message aléatoire
 		
@@ -77,9 +82,11 @@ public class Yana extends Activity implements TextToSpeech.OnInitListener{
 	public static boolean servstate=false, eventstate=false;
 	boolean Box_TTS;
 	
-	String Token="";
+	String Token=""; 
+	public static String version;
+	String version_ex;
 	
-	SharedPreferences.Editor geted;
+	SharedPreferences preferences;
 	
 		// Conversation et liste de commandes
 	int n=1;
@@ -124,7 +131,13 @@ public class Yana extends Activity implements TextToSpeech.OnInitListener{
     	StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build(); // Empêche un bug de contact avec le RPi (je ne sais pas pourquoi :))
     	StrictMode.setThreadPolicy(policy);
 
-		geted = PreferenceManager.getDefaultSharedPreferences(this).edit(); // Pour éditer les options
+		preferences= PreferenceManager.getDefaultSharedPreferences(this);
+		
+		try {
+			PackageInfo pInfo = getPackageManager().getPackageInfo(getPackageName(), 0);
+			version = pInfo.versionName;
+			Log.d("Version","Version de l'application : "+version);} 
+		catch (NameNotFoundException e) {e.printStackTrace();}
     	
 		IPadress.setInputType(InputType.TYPE_TEXT_VARIATION_WEB_EDIT_TEXT); // Définit l'EditText comme un champ URL
     	
@@ -163,7 +176,34 @@ public class Yana extends Activity implements TextToSpeech.OnInitListener{
 		   		bienvenue_fait=true;
 		   		Rep = Random_String();
 		   		mTts = new TextToSpeech(this, this);}
-	}}
+		   	
+		   	if(changelog){
+				String Changelog="Impossible de charger les changelogs.";
+				
+				try{Resources res = getResources();
+			        InputStream in_s = res.openRawResource(R.raw.changelog);
+			        InputStreamReader in_r = new InputStreamReader(in_s, "UTF-8");
+
+			        char[] b = new char[in_s.available()];
+			        in_r.read(b);
+			        
+			        Changelog = new String(b);} 
+				catch (Exception e) {Log.d("Changelog",""+e);}
+				
+				AlertDialog.Builder builder = new AlertDialog.Builder(this);
+				builder.setMessage(Changelog)
+					   .setTitle("Changelogs")
+				       .setCancelable(false)
+				       .setPositiveButton("OK", new DialogInterface.OnClickListener() {
+				           public void onClick(DialogInterface dialog, int id) {
+				        	    changelog=false;
+				        	    Traitement.Verif_aux("Changelog_do", getApplicationContext());}
+				       });
+				AlertDialog alert = builder.create();
+				alert.show();
+		   	}
+    	}
+    }
 	
 	public void onActivityResult(int requestCode, int resultCode, Intent data){ // S'exécute lors d'un retour d'activité
     switch (requestCode) {
@@ -243,27 +283,23 @@ public class Yana extends Activity implements TextToSpeech.OnInitListener{
 		return super.onOptionsItemSelected(item);}
 
     void getConfig(){ // Importe les paramètres
-    	SharedPreferences preferences= PreferenceManager.getDefaultSharedPreferences(this);
-    	
     	String ip_adress;
-    	if(Traitement.Verif_Reseau(getApplicationContext())){
-    		ip_adress=preferences.getString("IPadress", "");}// Importe l'adresse du RPi
-    	else{
-    		ip_adress=preferences.getString("IPadress_ext", "");}// Importe l'adresse du RPi
+    	if(Traitement.Verif_Reseau(getApplicationContext())) ip_adress=preferences.getString("IPadress", "");// Importe l'adresse du RPi
+    	else ip_adress=preferences.getString("IPadress_ext", "");// Importe l'adresse du RPi
     	
-    	if(ip_adress != ""){
-    		IPadress.setText(ip_adress);}
+    	if(ip_adress != "") IPadress.setText(ip_adress);
     	
     	AI = preferences.getBoolean("AI", true);
     		
     	Box_TTS=preferences.getBoolean("tts_pref", true); // Importe l'état de la box (autorise ou non le TTS)
-    	if(Box_TTS==false){
-    		tts_pref_false.setText("Attention ! Votre TTS est désactivé.");}
-    	else{
-    		tts_pref_false.setText("");}
+    	if(Box_TTS==false) tts_pref_false.setText("Attention ! Votre TTS est désactivé.");
+    	else tts_pref_false.setText("");
     	
     	bienvenue=preferences.getBoolean("bienvenue", true);
-
+    	
+	    version_ex=preferences.getString("version", "");
+		if(version.compareTo(version_ex)!=0) changelog=true;
+    	
     	update=preferences.getBoolean("update", false);
     	
     	Token=preferences.getString("token", "");
@@ -272,7 +308,7 @@ public class Yana extends Activity implements TextToSpeech.OnInitListener{
 		Prénom=preferences.getString("surname", "");
 		Sexe=preferences.getString("sexe", "");
 		Pseudo=preferences.getString("nickname", "");
-    		
+    	
     	mShakeService=new Intent(Yana.this, ShakeService.class); // Démarre le service en fonction de l'état de la box
     	boolean Box_shake=preferences.getBoolean("shake", false);
     	if((Box_shake==true) && servstate==false){startService(mShakeService);}
@@ -374,7 +410,8 @@ public class Yana extends Activity implements TextToSpeech.OnInitListener{
 	    	    	int i = Traitement.Comparaison(Reco.get(ID));
 					Prétraitement(Traitement.Commandes.get(i), Traitement.Liens.get(i));
 	    	    	return false;}
-				});}
+			});
+	    }
     	
     	ListView Commandes_List =(ListView) findViewById(R.id.commandes_layout);
 		ArrayAdapter<String> modeAdapter = new ArrayAdapter<String>(this, R.drawable.command_list, Traitement.Commandes_a);
@@ -405,12 +442,16 @@ public class Yana extends Activity implements TextToSpeech.OnInitListener{
 		    		Toast toast= Toast.makeText(getApplicationContext(), // En cas d'échec, il prévient l'utilisateur
 		    		Traitement.Commandes.get(Traitement.Commandes.size()-1), 4000);  
 					toast.setGravity(Gravity.TOP|Gravity.CENTER_HORIZONTAL, 0, 80);
-					toast.show();}}
+					toast.show();
+					Traitement.Add_Commandes(false);
+					Traitement.Commandes_a = new ArrayList<String>(Traitement.Commandes);}}
 		    else{
 		    	Toast toast= Toast.makeText(getApplicationContext(), // En cas d'échec, il prévient l'utilisateur
 			    	"Vous n'avez pas de connexion internet !", 4000);  
 					toast.setGravity(Gravity.TOP|Gravity.CENTER_HORIZONTAL, 0, 80);
-					toast.show();}
+					toast.show();
+					Traitement.Add_Commandes(false);
+					Traitement.Commandes_a = new ArrayList<String>(Traitement.Commandes);}
     	}
     	
     	else if (Token.compareTo("")==0 && !AI){ 

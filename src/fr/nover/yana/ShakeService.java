@@ -20,7 +20,6 @@ import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Handler;
 import android.os.IBinder;
-import android.os.Looper;
 import android.speech.tts.TextToSpeech;
 import android.speech.tts.TextToSpeech.OnUtteranceCompletedListener;
 import android.os.Bundle;
@@ -109,7 +108,7 @@ public class ShakeService extends Service implements TextToSpeech.OnInitListener
         mSpeechRecognizerWrapper.Broad(this);
         
         fin();
-        if(Looper.myLooper() == Looper.getMainLooper()){Log.d("Looper","true");}
+
         SharedPreferences preferences= PreferenceManager.getDefaultSharedPreferences(this);
 		Speech_continu=preferences.getBoolean("continu", false);
 		Log.d("Speech_continu","Speech_continu : "+Speech_continu);}

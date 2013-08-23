@@ -274,8 +274,12 @@ public class Traitement {
 			else{Rep="Les événements sont déjà activés.";}
 			return true;}
 		
-		return false;
-	}
+		else if(Commande.contains("Changelog_do")){
+			geted.putString("version", Yana.version);
+			geted.commit();
+			return true;}
+		
+		return false;}
 	
 	public static void Add_Commandes(boolean Full){
 		int i=0;
@@ -308,10 +312,11 @@ public class Traitement {
 			Identifiant_cat.add("vocalinfo_sound");
 			
 			Categories.add("Relais radio");
-			Identifiant_cat.add("radioRelay_change_state");}
+			Identifiant_cat.add("radioRelay_change_state");
 		
-		Categories.add("Ceci est ajouté uniquement pour éviter de faire des erreurs (car l'ArrayList serait vide)");
-		Identifiant_cat.add("Ceci est ajouté uniquement pour éviter de faire des erreurs (car l'ArrayList serait vide)");}
+			Categories.add("Ceci est ajouté uniquement pour éviter de faire des erreurs (car l'ArrayList serait vide)");
+			Identifiant_cat.add("Ceci est ajouté uniquement pour éviter de faire des erreurs (car l'ArrayList serait vide)");}
+		}
 	
 	public static void Media_Player(String Son, Context context){
 		Sons = true;

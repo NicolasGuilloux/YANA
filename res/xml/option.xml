@@ -168,9 +168,15 @@
         </PreferenceScreen>
         <PreferenceCategory >
         
-	        <Preference android:title="Relancer l'assistant d'installation"
-	                android:key="button"
-	                android:summary="Cliquez pour relancer l'assistant d'installation"/>
+	        <Preference 
+	            android:title="Relancer l'assistant d'installation"
+	            android:key="button"
+	            android:summary="Cliquez pour relancer l'assistant d'installation"/>
+	        
+	        <EditTextPreference 
+	            android:key="acra.user.email"
+			    android:title="Votre e-mail pour vous contacter"
+			    android:summary="Entrez votre e-mail pour que le développeur puisse vous contacter"/>
         
        </PreferenceCategory>
        

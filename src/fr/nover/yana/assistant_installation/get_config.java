@@ -9,7 +9,7 @@ import android.preference.PreferenceManager;
 
 public class get_config extends PreferenceActivity {
 
-	String [] testValues = {"Mademoiselle" , "Madame", "Monsieur"};
+	String [] Values = {"Mademoiselle" , "Madame", "Monsieur"};
     public static String Nom, Prénom, Pseudonyme, IPAdress, IPadress_ext, SSID;
     public static boolean TTS, ShakeService, Update_Com, externe, EventService;
     public static int Sexe;
@@ -19,9 +19,8 @@ public class get_config extends PreferenceActivity {
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		addPreferencesFromResource(R.xml.option);
-		
+
 		geted = PreferenceManager.getDefaultSharedPreferences(this).edit();
-		
 		geted.putBoolean("AI", false);
 		geted.putString("name", Nom);
 		geted.putString("surname", Prénom);
@@ -40,9 +39,9 @@ public class get_config extends PreferenceActivity {
     	geted.commit();
 	
 		ListPreference lp = (ListPreference) findPreference("sexe");
-		lp.setEntries(testValues);
-		lp.setEntryValues(testValues);
-		if(Sexe<3){lp.setValue(testValues[Sexe]);}
+		lp.setEntries(Values);
+		lp.setEntryValues(Values);
+		if(Sexe<3) lp.setValue(Values[Sexe]);
 		
 		finish();}
 }		

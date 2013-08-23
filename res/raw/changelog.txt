@@ -1,0 +1,20 @@
+Version 1.1.3
+Ajout de l'adresse e-mail dans le rapport de bugs automatique
+Ajout des changelogs !
+Correction d'un énième bug d'affichage (s'il y en a d'autres, merci de me contacter).
+IMPORTANT : le ShakeService est toujours bugué. Je suis désolé, j'essaierais de le débug quand j'aurais du temps.
+
+Version 1.1.2
+Correction des bugs "ExpandableList"
+Correction du bug d'affichage de la List en cas de non upload ou Token
+vide.
+
+Version 1.1.1
+Modification du panel avec une magnifique "ExpandableListView" :D
+Nouvelle adaptation au système
+
+Version 1.1.0
+Ajout des sons
+Ajout de la prise en charge des événements
+Ajout de quelques commandes
+Changement visuel des commandes
