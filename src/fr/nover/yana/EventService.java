@@ -46,7 +46,8 @@ public class EventService extends Service implements OnUtteranceCompletedListene
     Runnable Runnable, Runnable2;
     Timer t;
     
-    boolean Sound,Toasts,Notifs,first=false,Toast_ready=true, Traitement_ready=true;
+    boolean Sound,Toasts,Notifs,Toast_ready=true, Traitement_ready=true;
+    public static boolean first=true;
     int i,j=0;
     String Phrase;
     

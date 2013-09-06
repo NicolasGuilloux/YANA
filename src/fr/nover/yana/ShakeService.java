@@ -16,10 +16,12 @@ import android.content.SharedPreferences;
 import android.hardware.Sensor;
 import android.hardware.SensorManager;
 import android.media.AudioManager;
+import android.media.MediaPlayer;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Handler;
 import android.os.IBinder;
+import android.os.PowerManager;
 import android.speech.tts.TextToSpeech;
 import android.speech.tts.TextToSpeech.OnUtteranceCompletedListener;
 import android.os.Bundle;
@@ -47,7 +49,7 @@ public class ShakeService extends Service implements TextToSpeech.OnInitListener
 	private ShakeDetector mShakeDetector; // Pour la détection du "shake"
     private SensorManager mSensorManager;
     private Sensor mAccelerometer;
-    private SpeechRecognizerWrapper mSpeechRecognizerWrapper;
+    SpeechRecognizerWrapper mSpeechRecognizerWrapper;
     
     private TextToSpeech mTts; // Déclare le TTS
     boolean TTS_Box; // Permet de savoir si le TTS est autorisé
@@ -116,6 +118,7 @@ public class ShakeService extends Service implements TextToSpeech.OnInitListener
     public void onDestroy() { // En cas d'arrêt du service
         super.onDestroy();
         Yana.servstate=false; // Définit l'état du service (éteint)
+        mSpeechRecognizerWrapper.Stop();
         unregisterReceiver(mReceiver);
         mShakeDetector.setOnShakeListener(new OnShakeListener(){ // Arrête le Shake
             @Override
@@ -133,17 +136,28 @@ public class ShakeService extends Service implements TextToSpeech.OnInitListener
 		Toast t = Toast.makeText(getApplicationContext(),A_dire,Toast.LENGTH_SHORT); // Affiche la phrase dites par votre téléphone
 		t.show();
 		
-		if(TTS_Box){ // Si on autorise le TTS
+		if(TTS_Box && Yana.servstate){ // Si on autorise le TTS
 			mTts.setOnUtteranceCompletedListener(this);
 			HashMap<String, String> myHashAlarm = new HashMap<String, String>();
             myHashAlarm.put(TextToSpeech.Engine.KEY_PARAM_STREAM, String.valueOf(AudioManager.STREAM_ALARM));
             myHashAlarm.put(TextToSpeech.Engine.KEY_PARAM_UTTERANCE_ID, "Enonciation terminée");
+            
+            //AudioManager am = (AudioManager)getSystemService(Context.AUDIO_SERVICE);
+            //int amStreamMusicMaxVol = am.getStreamMaxVolume(am.STREAM_MUSIC);
+            //am.setStreamVolume(am.STREAM_MUSIC, amStreamMusicMaxVol, 0);
+            
 			mTts.speak(A_dire,TextToSpeech.QUEUE_FLUSH, myHashAlarm);} // Il dicte sa phrase
 		}
 
 	@Override
 	public void onUtteranceCompleted(String utteranceId) {
-		if(!last_init || (SpeechRecognizerWrapper.mIsListening && Speech_continu)){ // Si il n'a pas déjà initialisé le processus de reconnaissance vocale
+		
+		if(!Yana.servstate){
+			fin();
+			mSpeechRecognizerWrapper.Stop();
+        	last_init=true;}
+		
+		else if(Speech_continu){ // Si il n'a pas déjà initialisé le processus de reconnaissance vocale
 			myHandler.postDelayed(new Runnable(){
 				@Override
 				public void run() {
@@ -216,11 +230,16 @@ public class ShakeService extends Service implements TextToSpeech.OnInitListener
 
     public void onRecognizerFinished(String Resultat) {
         Log.d(TAG,"Ordre : " + Resultat);
-        if(!Speech_continu) mSpeechRecognizerWrapper.Stop();last_init=true;
-		A_dire="";
+        
+        if(!Speech_continu){
+        	mSpeechRecognizerWrapper.Stop();
+        	last_init=true;}
+
 		if (speech != null) {
 			speech.destroy();
 			speech = null;}
+        
+		A_dire="";
 		
 		String Ordre="", URL="";
 		n = Traitement.Comparaison(Resultat); // Compare les deux chaines de caractères
@@ -237,8 +256,34 @@ public class ShakeService extends Service implements TextToSpeech.OnInitListener
 	 	if(n>0){ // Si l'ordre est valable
 	 		if(Traitement.Verif_aux(Ordre,context)) A_dire=Traitement.Rep;
 	 		else{
-		    	URL = Traitement.Liens.get(n);
-		    	
+	 			
+	 			ArrayList<String> Params = Traitement.Parameter.get(Ordre);
+	 	    	
+	 	    	if(Params.size()>2){
+	 	        	String Reponse="";
+	 	    		String type = Params.get(2);
+	 	    		if(type.compareTo("talk")==0){
+	 	    			Reponse = Params.get(3);
+	 		    		if(!Traitement.Sons) getTTS();}
+	 	    		else if(type.compareTo("sound")==0){
+	 	    			String Son = Params.get(3);
+	 	    			Reponse = "*"+Son+"*";
+	 	    			try{int ID = getResources().getIdentifier(Son, "raw", "fr.nover.yana");
+	 	    			
+	 		    			MediaPlayer mp = MediaPlayer.create(this, ID); 
+	 		    			mp.setWakeMode(getApplicationContext(), PowerManager.PARTIAL_WAKE_LOCK);
+	 		    			mp.start();}
+	 	    			catch(Exception e){}
+	 	    		}
+
+	 	        if(Reponse.compareTo("")==0){
+	 	        	NewRep.putExtra("contenu", Reponse); // Envoie de la réponse à l'interface
+	 			 	LocalBroadcastManager.getInstance(this).sendBroadcast(NewRep);}
+	 	        }
+	 	    	
+	 			
+				URL = Traitement.Parameter.get(Ordre).get(0);
+		 
 		    	ConnectivityManager cm = (ConnectivityManager) getApplicationContext()
 	                    .getSystemService(Context.CONNECTIVITY_SERVICE);
 	     

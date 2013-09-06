@@ -19,12 +19,13 @@ import android.content.SharedPreferences;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager.NameNotFoundException;
 import android.content.res.Resources;
+import android.media.MediaPlayer;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
-import android.os.StrictMode;
+import android.os.PowerManager;
 import android.preference.PreferenceManager;
 import android.speech.RecognizerIntent;
 import android.speech.tts.TextToSpeech;
@@ -53,6 +54,7 @@ import android.widget.AdapterView.OnItemClickListener;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Locale;
 import java.util.Random;
 
@@ -127,9 +129,6 @@ public class Yana extends Activity implements TextToSpeech.OnInitListener{
     	btnRec = (ImageButton) findViewById(R.id.btnRec);
     	ip_adress = (ImageView) findViewById(R.id.ip_adress);
     	expListView = (ExpandableListView) findViewById(R.id.ExpLV);
-    	
-    	StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build(); // Empêche un bug de contact avec le RPi (je ne sais pas pourquoi :))
-    	StrictMode.setThreadPolicy(policy);
 
 		preferences= PreferenceManager.getDefaultSharedPreferences(this);
 		
@@ -218,9 +217,9 @@ public class Yana extends Activity implements TextToSpeech.OnInitListener{
 				if(n<0){Ordre=Recrep;} // Si la comparaison a échoué
 				else{ // Sinon, la commande la plus proche de l'ordre est attribuée à Ordre
 					Ordre = Traitement.Commandes.get(n); 
-					URL = Traitement.Liens.get(n);}
+					URL = Traitement.Parameter.get(Ordre).get(0);}
 	
-				Prétraitement(Ordre, URL); // Envoie en Prétraitement
+				Prétraitement(Ordre, URL, n); // Envoie en Prétraitement
 				break;}}
 		
 		case OPTION: // Dès un retour de la configuration, il la recharge
@@ -249,7 +248,7 @@ public class Yana extends Activity implements TextToSpeech.OnInitListener{
 				testTTS=true;
 				mTts.setLanguage(Locale.FRENCH);
 				
-				mTts.speak(Rep,TextToSpeech.QUEUE_FLUSH, null); // Il dicte sa phrase
+				if(Rep.compareTo("")!=0) mTts.speak(Rep,TextToSpeech.QUEUE_FLUSH, null); // Il dicte sa phrase
 			    Rep="";} // Au cas où Rep reste le même à la prochaine déclaration du TTS
 		}
 		catch(Exception e){
@@ -257,7 +256,7 @@ public class Yana extends Activity implements TextToSpeech.OnInitListener{
     				"Impossible de vérifier les langues de votre TTS. Yana va tout de même essayer de le lancer.",
     				Toast.LENGTH_SHORT);
     	        	t.show();
-    	        	mTts.speak(Rep,TextToSpeech.QUEUE_FLUSH, null); // Il dicte sa phrase
+    	        	if(Rep.compareTo("")!=0) mTts.speak(Rep,TextToSpeech.QUEUE_FLUSH, null); // Il dicte sa phrase
     			    Rep="";}
 	}
 
@@ -269,6 +268,7 @@ public class Yana extends Activity implements TextToSpeech.OnInitListener{
 	
 	public void onResume(){
 		getConfig();
+		Commandes_Layout();
 		super.onResume();}
 	
     public boolean onCreateOptionsMenu(Menu menu) { // Il dit juste que y'a telle ou telle chose dans le menu
@@ -295,6 +295,8 @@ public class Yana extends Activity implements TextToSpeech.OnInitListener{
     	if(Box_TTS==false) tts_pref_false.setText("Attention ! Votre TTS est désactivé.");
     	else tts_pref_false.setText("");
     	
+    	Log.d("","test");
+    	
     	bienvenue=preferences.getBoolean("bienvenue", true);
     	
 	    version_ex=preferences.getString("version", "");
@@ -319,7 +321,9 @@ public class Yana extends Activity implements TextToSpeech.OnInitListener{
     	
     	mEventService=new Intent(Yana.this, EventService.class); // Démarre le service en fonction de l'état de la box
     	boolean Box_Event=preferences.getBoolean("event", false);
-    	if((Box_Event==true) && eventstate==false){startService(mEventService);}
+    	if((Box_Event==true) && eventstate==false){
+    		startService(mEventService);
+    		EventService.first=false;}
     	else if((Box_Event==false) && eventstate==true){stopService(mEventService);}
     	
     	Traitement.Voice_Sens = Double.parseDouble(preferences.getString("Voice_sens", "3.0"))* Math.pow(10.0,-2.0); // Importe la sensibilité de la comparaison des chaines de caractères
@@ -398,7 +402,7 @@ public class Yana extends Activity implements TextToSpeech.OnInitListener{
     
 	void Commandes_Layout(){ // Ici, on va inscrire les commandes sur le panel
 		
-		if(Traitement.Categories.size()>0){
+		if(Traitement.Categories.size()>0 && Traitement.listDataChild.size()>0){
 			ExpandableListAdapter listAdapter = new ExpandableListAdapter(this, Traitement.Categories, Traitement.listDataChild);
 	        expListView.setAdapter(listAdapter);
 	        
@@ -408,7 +412,7 @@ public class Yana extends Activity implements TextToSpeech.OnInitListener{
 	    	    	int ID=(int)itemID;
 	    	    	ArrayList<String> Reco = Traitement.listDataChild.get(Traitement.Categories.get(groupPosition));
 	    	    	int i = Traitement.Comparaison(Reco.get(ID));
-					Prétraitement(Traitement.Commandes.get(i), Traitement.Liens.get(i));
+					Prétraitement(Traitement.Commandes.get(i), Traitement.Parameter.get(Traitement.Commandes.get(i)).get(0), i);
 	    	    	return false;}
 			});
 	    }
@@ -421,14 +425,14 @@ public class Yana extends Activity implements TextToSpeech.OnInitListener{
     	    public void onItemClick(AdapterView<?> arg0, View view, int arg2,long itemID) {
     	    	int ID=(int)itemID;
     	    	int i = Traitement.Comparaison(Traitement.Commandes_a.get(ID));
-				Prétraitement(Traitement.Commandes.get(i), Traitement.Liens.get(i));}
+				Prétraitement(Traitement.Commandes.get(i), Traitement.Parameter.get(Traitement.Commandes.get(i)).get(0), i);}
 			});}
 
     void Commandes_actu(){ // Ici on va actualiser la liste des commandes
     	ConnectivityManager cm = (ConnectivityManager) getApplicationContext()
                 .getSystemService(Context.CONNECTIVITY_SERVICE);
- 
         NetworkInfo activeNetwork = cm.getActiveNetworkInfo();
+ 		ArrayList<String> Params = new ArrayList<String>();
 		
     	if(Commande_actu && Token.compareTo("")!=0){
     		if(activeNetwork!=null){
@@ -443,28 +447,28 @@ public class Yana extends Activity implements TextToSpeech.OnInitListener{
 		    		Traitement.Commandes.get(Traitement.Commandes.size()-1), 4000);  
 					toast.setGravity(Gravity.TOP|Gravity.CENTER_HORIZONTAL, 0, 80);
 					toast.show();
-					Traitement.Add_Commandes(false);
 					Traitement.Commandes_a = new ArrayList<String>(Traitement.Commandes);}}
 		    else{
 		    	Toast toast= Toast.makeText(getApplicationContext(), // En cas d'échec, il prévient l'utilisateur
 			    	"Vous n'avez pas de connexion internet !", 4000);  
 					toast.setGravity(Gravity.TOP|Gravity.CENTER_HORIZONTAL, 0, 80);
 					toast.show();
-					Traitement.Add_Commandes(false);
 					Traitement.Commandes_a = new ArrayList<String>(Traitement.Commandes);}
     	}
     	
     	else if (Token.compareTo("")==0 && !AI){ 
     		
     		Traitement.Commandes.clear();
-    		Traitement.Liens.clear();
-    		Traitement.Confidences.clear();
+    		Traitement.Parameter= new HashMap<String, ArrayList<String>>();
     		
     		Traitement.Add_Commandes(false);
 			
-    		Traitement.Commandes.add("Vous n'avez pas entré le Token. L'application ne peut pas communiquer avec votre Raspberry Pi.");
-    		Traitement.Liens.add("");
-    		Traitement.Confidences.add("0.7");
+    		String Command = "Vous n'avez pas entré le Token. L'application ne peut pas communiquer avec votre Raspberry Pi.";
+    		Traitement.Commandes.add(Command);
+    		Params.add("");
+    		Params.add("");
+    		Traitement.Parameter.put(Command, Params);
+    		
     		
     		Toast toast= Toast.makeText(getApplicationContext(), // En cas d'échec, il prévient l'utilisateur
     		Traitement.Commandes.get(Traitement.Commandes.size()-1), 4000);  
@@ -476,36 +480,62 @@ public class Yana extends Activity implements TextToSpeech.OnInitListener{
     	else{
     		Commande_actu=true;
     		Traitement.Commandes.clear();
-    		Traitement.Liens.clear();
-    		Traitement.Confidences.clear();
+    		Traitement.Parameter = new HashMap<String, ArrayList<String>>();
     		
     		Traitement.Add_Commandes(false);
 			
-    		Traitement.Commandes.add("Vous n'avez pas encore actualisé vos commandes.");
-    		Traitement.Liens.add("");
-    		Traitement.Confidences.add("0.7");
+    		String Command = "Vous n'avez pas encore actualisé vos commandes.";
+    		Traitement.Commandes.add(Command);
+    		Params.add("");
+    		Params.add("");
+    		Traitement.Parameter.put(Command, Params);
 
 		 	Traitement.Commandes_a = new ArrayList<String>(Traitement.Commandes);}
     	
     	Commandes_Layout();}
     
-    void Prétraitement(final String Ordre, final String URL){ // Ici, on va analyser la réponse si elle est traitable localement. Sinon, on l'envoie au RPi
+    void Prétraitement(final String Ordre, final String URL, final int n){ // Ici, on va analyser la réponse si elle est traitable localement. Sinon, on l'envoie au RPi
     	conversation(Ordre, "envoi");
+    	
+    	if(n>0){
+			ArrayList<String> Params = Traitement.Parameter.get(Ordre);
+			Log.d("","Params : "+Params);
+	    	
+	    	if(Params.size()>2){
+	        	String Reponse="";
+	    		String type = Params.get(2);
+	    		if(type.compareTo("talk")==0){
+	    			Reponse = Params.get(3);
+		    		if(Box_TTS==true && !Traitement.Sons){ // Lance la synthèse vocale si les options l'autorisent
+						mTts = new TextToSpeech(this, this);}}
+	    		else if(type.compareTo("sound")==0){
+	    			String Son = Params.get(3);
+	    			Reponse = "*"+Son+"*";
+	    			try{int ID = getResources().getIdentifier(Son, "raw", "fr.nover.yana");
+	    			
+		    			MediaPlayer mp = MediaPlayer.create(this, ID); 
+		    			mp.setWakeMode(getApplicationContext(), PowerManager.PARTIAL_WAKE_LOCK);
+		    			mp.start();}
+	    			catch(Exception e){}
+	    		}
+   
+	    		if(Reponse.compareTo("")==0) conversation(Reponse, "reponse");}
+	    }
     	
     	myHandler.postDelayed(new Runnable(){
 
 		@Override
 		public void run() {
-			Prétraitement2(Ordre,URL);
+			Prétraitement2(Ordre,URL, n);
 		}}, 250);
     }  
     
-    void Prétraitement2 (String Ordre, String URL){ // Deuxième partie du Prétraitement (MyHandler l'oblige pour afficher l'ordre avant le traitement)
+    void Prétraitement2 (String Ordre, String URL, int n){ // Deuxième partie du Prétraitement (MyHandler l'oblige pour afficher l'ordre avant le traitement)
     	Rep="";
-    	  
-    	if(Traitement.Verif_aux(Ordre,this)) Rep = Traitement.Rep;  // Vérification auxiliaire
-    	else if(URL.compareTo("")==0) Rep="";
-    	else if(Ordre.compareTo(Recrep)==0) Rep="Aucun ordre ne semble être identifié au votre."; // Si Ordre=Recrep alors c'est que la reconnaissance par pertinence a échoué
+    	
+    	if(Traitement.Verif_aux(Ordre, this)) Rep = Traitement.Rep;  // Vérification auxiliaire
+    	else if(n==-1) Rep="Je ne vois aucun ordre qui ressemble à ce que vous avez dit..."; // Si Ordre=Recrep alors c'est que la reconnaissance par pertinence a échoué
+    	else if(URL.compareTo("")==0) Rep=""; // Si l'ordre ne contient aucun URL, ça n'est pas utile de l'envoyer au serveur
     	else{
     		ConnectivityManager cm = (ConnectivityManager) getApplicationContext()
                     .getSystemService(Context.CONNECTIVITY_SERVICE);
@@ -521,12 +551,14 @@ public class Yana extends Activity implements TextToSpeech.OnInitListener{
     					toast.setGravity(Gravity.TOP|Gravity.CENTER_HORIZONTAL, 0, 80);
     					toast.show();}
         }
-		if(Rep.compareTo("")!=0){
+
+    	Log.d("","Rep : "+Rep);
+    	
+		if(Rep.compareTo("")!=0){ // Si la réponse n'est pas valide, ça ne sert à rien de la dire ni de l'énoncer
 			conversation(Rep, "reponse");
 			
 			if(Box_TTS==true && Rep.length()<300 && !Traitement.Sons){ // Lance la synthèse vocale si les options l'autorisent et si la réponse n'est pas trop longue
 				mTts = new TextToSpeech(this, this);}
-			else if(!Traitement.Sons) Traitement.Sons=false;
 		}}
     
     public String Random_String(){ // Choisit une chaine de caractères au hasard
@@ -550,5 +582,5 @@ public class Yana extends Activity implements TextToSpeech.OnInitListener{
         String Retour = list.get(randomInt).toString();
 		
 		return Retour;}
-
+    
 }

@@ -30,8 +30,8 @@ public class JsonParser extends AsyncTask<String, Void, JSONObject> {
 			jObj=null;
 			
 			HttpParams httpParameters = new BasicHttpParams();
-			HttpConnectionParams.setConnectionTimeout(httpParameters, 3000);
-			HttpConnectionParams.setSoTimeout(httpParameters, 3000);
+			HttpConnectionParams.setConnectionTimeout(httpParameters, 5000);
+			HttpConnectionParams.setSoTimeout(httpParameters, 5000);
 
 			DefaultHttpClient httpClient = new DefaultHttpClient(httpParameters);
 			
@@ -41,19 +41,23 @@ public class JsonParser extends AsyncTask<String, Void, JSONObject> {
 			json = EntityUtils.toString(httpEntity).trim();
 			if(json.compareTo("")==0){ // Met un emplacement vide en esquivant le JSONException
 				json="{\"responses\":[{\"type\":\"talk\",\"sentence\":\"\"}]}";}
+			
+			json = json.replace("&#039;", "'");
+			json = json.replace("eteint", "éteint");
+			
 			Log.d("Résultat sous forme de JSON"," "+json);
 		}
 		catch (UnsupportedEncodingException e) {
-			Log.d("","UnsupportedEncoding");
+			Log.d("JsonParser","UnsupportedEncoding");
 			e.printStackTrace();Traitement.retour=false;} 
 		catch (ClientProtocolException e) {
-			Log.d("","Client");
+			Log.d("JsonParser","Client");
 			e.printStackTrace();Traitement.retour=false;} 
 		catch (IOException e) {
-			Log.d("","IOException");
+			Log.d("JsonParser","IOException");
 			e.printStackTrace();Traitement.retour=false;}
 		catch (Exception e) {
-			Log.d("","Exception");
+			Log.d("JsonParser","Exception");
 			e.printStackTrace();Traitement.retour=false;}
 	
 		// convertir le résultat qui est sous format d'un String en un JSONObject

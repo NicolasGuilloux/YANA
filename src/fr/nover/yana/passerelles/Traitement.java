@@ -16,6 +16,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import fr.nover.yana.EventService;
 import fr.nover.yana.Yana;
 
 import android.annotation.SuppressLint;
@@ -40,10 +41,11 @@ public class Traitement {
  	static public String URL="", Rep;
  	static public boolean Sons;
  	
+ 	
+ 	
  		// Déclare les ArraList utilisées pour stocker les éléments de commandes
  	public static ArrayList<String> Commandes = new ArrayList<String>();
- 	public static ArrayList<String> Liens = new ArrayList<String>();
- 	public static ArrayList<String> Confidences = new ArrayList<String>();
+ 	public static HashMap<String, ArrayList<String>> Parameter;
  	
  	public static ArrayList<String> Categories = new ArrayList<String>();
     public static ArrayList<String> Identifiant_cat = new ArrayList<String>();
@@ -60,29 +62,33 @@ public class Traitement {
 		double c=0,co;
 		try{
 			for (int i = 0; i < Commandes.size(); i++){
+				String Confidence = Parameter.get(Commandes.get(i)).get(1);
+				if (Confidence.compareTo("")==0) Confidence="0.8";
 				co=LevenshteinDistance.similarity(Enregistrement, Commandes.get(i));
-				if(co>c && co>Double.parseDouble(Confidences.get(i))-Voice_Sens){
+				if(co>c && co>Double.parseDouble(Confidence)-Voice_Sens){
 					c=co;
 					n=i;}
 		}}
 		catch(Exception e){Log.e("log_tag", "Erreur pour la comparaison : "+e.toString());}
-		Log.d("Avant Check_VoiceSens", "c="+Voice_Sens);
-		Log.d("Avant Check_VoiceSens", "n="+n);
+		Log.d("Traitement - Comparaison", "c="+Voice_Sens);
+		Log.d("Traitement - Comparaison", "n="+n);
 		if(c<Voice_Sens){n=-1;} // Compare en fonction de la sensibilité (cf option)
 		return n;} // Retourne le résultat
 	
 	public static String HTTP_Contact(String URL, Context context){
 		Log.d("Echange avec le serveur",""+URL);
+		retour=true;
 		
 		try{json = new JsonParser().execute(URL).get();}
-		catch(Exception e){Log.d("Echec du contact","Le server n'a pas pu être contacté");}
+		catch(Exception e){Log.d("Traitement - HTTP_Contact","Le server n'a pas pu être contacté");}
+		
+		if(!retour) return "Il y a eu une erreur lors du contact avec Yana-Serveur.";
 		    	
 		try{JSONArray commands = json.getJSONArray("responses");
 			JSONObject Rep = commands.getJSONObject(0); // Importe la première valeur
 			String type = Rep.getString("type");
 				
-			if(type.compareTo("talk")==0){
-				Reponse=Rep.getString("sentence");}
+			if(type.compareTo("talk")==0) Reponse=Rep.getString("sentence");
 			
 			else if (Rep.getString("type").compareTo("sound")==0){
 				String Son = Rep.getString("file");
@@ -112,16 +118,13 @@ public class Traitement {
 					Reponse="Il y a eu une erreur lors du contact avec le Raspberry Pi.";}
 				}
 
-		Reponse = Reponse.replace("&#039;", "'");
-		Reponse = Reponse.replace("eteint", "éteint");
     	return Reponse;}
 	
 	public static boolean pick_JSON(String IPadress, String Token){
 		retour=true;
 
 		Commandes.clear();
-		Liens.clear();
-		Confidences.clear();
+        Parameter = new HashMap<String, ArrayList<String>>();
 		
 		Categories.clear();
 		Identifiant_cat.clear();
@@ -132,25 +135,47 @@ public class Traitement {
 	 	try{json = new JsonParser().execute("http://"+IPadress+"?action=GET_SPEECH_COMMAND&token="+Token).get();}
 	 	catch(Exception e){}
 	 	
+	 	ArrayList<String> Links = new ArrayList<String>();
+	 	
 	 	if(retour){
 	 		Log.d("","Début du traitement du JSON");
 		 	try{JSONArray commands = json.getJSONArray("commands");
 				for(int i = 0; i < commands.length(); i++) {
 					JSONObject emp = commands.getJSONObject(i);
+
+			 		ArrayList<String> Params = new ArrayList<String>();
+					
 					String Command=emp.getString("command");
 					Command = Command.replace("&#039;", "'");
 					Command = Command.replace("eteint", "éteint");
+					
 					String URL = emp.getString("url");
 					URL = URL.replace("{", "%7B");
         			URL = URL.replace("}", "%7D");
 					StringTokenizer tokens = new StringTokenizer(URL, "?");
 					tokens.nextToken();
 					URL = tokens.nextToken();
+					Params.add(URL);
+					
+					Params.add(emp.getString("confidence"));
+					
+					String type="", contenu="";
+					try{
+						emp.getString("PreAction");
+						type=emp.getString("type");
+						if(type.compareTo("talk")==0) contenu=emp.getString("sentence");
+						else if(type.compareTo("sound")==0){
+							contenu = emp.getString("file");
+							contenu = contenu.replace(".wav", "");
+							contenu = contenu.replace(".mp3", "");}
+						Params.add(type);
+						Params.add(contenu);}
+					catch(Exception e){}
 					
 					if(!URL.contains("vocalinfo_devmod")){
 						Commandes.add(Command);
-						Liens.add(URL);
-						Confidences.add(emp.getString("confidence"));}
+						Links.add(URL);
+						Parameter.put(Command,Params);}
 				}
 			}
 		
@@ -164,10 +189,13 @@ public class Traitement {
 
 		 	Add_Commandes(true);
 		 	
-		 	ArrayList<String> Links = new ArrayList<String>(Liens);
 		 	Commandes_a = new ArrayList<String>(Commandes);
-
- 			 
+		 	
+		 	int x=0;
+		 	while(Commandes_a.size()!=Links.size()){
+		 		Links.add(x, "");
+		 		x++;}
+		 	
 		 	for (int y=Categories.size()-1; y>=0; y--){
 		 		ArrayList<String> Reco = new ArrayList<String>();
 		 		for(int i=Commandes_a.size()-1; i>=0; i--){
@@ -186,30 +214,38 @@ public class Traitement {
 		 	}
 	 	}
 	 	else{
-	 		Liens.add("");
-			Confidences.add("");
-	 		Commandes.add("Echec du contact avec le serveur. Veuillez vérifier votre système et l'adresse entrée.");}
+		 	ArrayList<String> Params = new ArrayList<String>();
+		 	String Command = "Echec du contact avec le serveur. Veuillez vérifier votre système et l'adresse entrée. Il est possible aussi que votre connexion est trop lente.";
+	 		Commandes.add(Command);
+	 		Params.add(""); // Initialise un URL
+	 		Params.add(""); // Initialise une confidence
+	 		Parameter.put(Command, Params);
+	 		
+	 		Add_Commandes(false);}
 		
 		return retour;}
 	
-	static void Verification_erreur(){
+	static boolean Verification_erreur(){
 		Log.d(TAG, "Regarde s'il n'y a pas une erreur disponible.");
 		
-		Liens.add("");
-		Confidences.add("");
+		ArrayList<String> Params = new ArrayList<String>();
+		String Command = null;
+ 		Params.add(""); // Initialise un URL
+ 		Params.add(""); // Initialise une confidence
 				
 		try{
-			if(json.getString("error").compareTo("insufficient permissions")==0 || json==null){
-				Commandes.add("Il y a une erreur d'identification ou vous n'avez pas les permissions nécéssaires. Vérifiez votre Token.");}
+			if(json.getString("error").compareTo("insufficient permissions")==0 || json==null) Command = "Vous n'avez pas les droits nécéssaires pour effectuer cette action. Contactez votre administrateur.";
+			if(json.getString("error").compareTo("invalid or missing token")==0 || json==null) Command = "Votre Token est invalide. Veuillez le vérifier.";
 		}
-		catch(JSONException x){
-			Log.d(TAG, "Echec de toute compréhension.");
-			Commandes.add("Echec de compréhension par rapport à la réponse du Raspberry Pi. Veuillez présenter le problème à Nover.");}
-
-		catch(Exception x){
-			Log.d(TAG, "Echec de toute compréhension.");
-			Commandes.add("Echec de compréhension par rapport à la réponse du Raspberry Pi. Veuillez présenter le problème à Nover.");}
-	}
+		catch(JSONException x){}
+		catch(Exception x){}
+		
+	Log.d(TAG, "Echec de toute compréhension.");
+	if(Command==null) Command="Echec de compréhension par rapport à la réponse du Raspberry Pi. Veuillez présenter le problème à Nover.";
+		
+	Commandes.add(Command);
+	Parameter.put(Command, Params);
+	return false;}
 
 	public static boolean Verif_Reseau(Context context){ // Vérifie le réseau local
 		try{WifiManager wifiManager = (WifiManager) context.getSystemService(Context.WIFI_SERVICE);
@@ -270,6 +306,7 @@ public class Traitement {
 			geted.commit();
 			if(Yana.eventstate==false){
 				context.startService(Yana.mEventService);
+	    		EventService.first=false;
 				Rep="Les événements sont maintenant activés.";}
 			else{Rep="Les événements sont déjà activés.";}
 			return true;}
@@ -283,25 +320,29 @@ public class Traitement {
 	
 	public static void Add_Commandes(boolean Full){
 		int i=0;
+		ArrayList<String> Params = new ArrayList<String>();
+		Params.add("");
+		Params.add("0.7");
+		String Command;
 		
-		Commandes.add(i, "YANA, montre-toi.");
-		Liens.add(i, "");
-		Confidences.add(i, "0.7");
+		Command = "YANA, montre-toi.";
+		Commandes.add(i, Command);
+		Parameter.put(Command, Params);
 		i++;
 		
-		Commandes.add(i, "YANA, cache-toi.");
-		Liens.add(i, "");
-		Confidences.add(i, "0.7");
+		Command = "YANA, cache-toi.";
+		Commandes.add(i, Command);
+		Parameter.put(Command, Params);
 		i++;
 		
-		Commandes.add(i, "YANA, active les événements.");
-		Liens.add(i, "");
-		Confidences.add(i, "0.7");
+		Command = "YANA, active les événements.";
+		Commandes.add(i, Command);
+		Parameter.put(Command, Params);
 		i++;
 		
-		Commandes.add(i, "YANA, désactive les événements.");
-		Liens.add(i, "");
-		Confidences.add(i, "0.7");
+		Command = "YANA, désactive les événements.";
+		Commandes.add(i, Command);
+		Parameter.put(Command, Params);
 		i++;
 		
 		if(Full){
