@@ -144,7 +144,9 @@
             	<ListPreference 
             	    android:title="Sexe" 
 				    android:summary="Entrez votre sexe."
-				    android:key="sexe" />
+				    android:key="sexe"
+				    android:entries="@array/listSexes"
+         			android:entryValues="@array/listSexes" />
             
            		 <EditTextPreference
 					android:key="name"

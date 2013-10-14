@@ -34,45 +34,45 @@ import android.widget.Toast;
 @SuppressLint("DefaultLocale")
 public class Traitement {
 	
-	static String Reponse=""; // Déclare la variable de réponse
+	static String reponse=""; // Déclare la variable de réponse
 	
  	private static final String TAG=""; // Logger tag
- 	public static double Voice_Sens; // Sensibilité de la comparaison entre ordres et commandes
- 	static public String URL="", Rep;
- 	static public boolean Sons;
+ 	public static double voice_Sens; // Sensibilité de la comparaison entre ordres et commandes
+ 	public static String URL="", rep;
+ 	public static boolean sons;
  	
  	
  	
  		// Déclare les ArraList utilisées pour stocker les éléments de commandes
- 	public static ArrayList<String> Commandes = new ArrayList<String>();
- 	public static HashMap<String, ArrayList<String>> Parameter;
+ 	public static ArrayList<String> commandes = new ArrayList<String>();
+ 	public static HashMap<String, ArrayList<String>> parameter;
  	
- 	public static ArrayList<String> Categories = new ArrayList<String>();
-    public static ArrayList<String> Identifiant_cat = new ArrayList<String>();
+ 	public static ArrayList<String> categories = new ArrayList<String>();
+    public static ArrayList<String> identifiant_cat = new ArrayList<String>();
  	
     public static HashMap<String, ArrayList<String>> listDataChild;
-    public static ArrayList<String> Commandes_a = new ArrayList<String>();
+    public static ArrayList<String> commandes_a = new ArrayList<String>();
  	
  	static boolean retour; // Déclare le retour pour la passerelles JsonParser
  	
  	static JSONObject json;
 
-	public static int Comparaison(String Enregistrement){ // Processus de comparaison pour faire une reconnaissance par pertinence
+	public static int comparaison(String enregistrement){ // Processus de comparaison pour faire une reconnaissance par pertinence
 		int n=-1;
 		double c=0,co;
 		try{
-			for (int i = 0; i < Commandes.size(); i++){
-				String Confidence = Parameter.get(Commandes.get(i)).get(1);
-				if (Confidence.compareTo("")==0) Confidence="0.8";
-				co=LevenshteinDistance.similarity(Enregistrement, Commandes.get(i));
-				if(co>c && co>Double.parseDouble(Confidence)-Voice_Sens){
+			for (int i = 0; i < commandes.size(); i++){
+				String confidence = parameter.get(commandes.get(i)).get(1);
+				if (confidence.equals("")) confidence="0.8";
+				co=LevenshteinDistance.similarity(enregistrement, commandes.get(i));
+				if(co>c && co>Double.parseDouble(confidence)-voice_Sens){
 					c=co;
 					n=i;}
 		}}
 		catch(Exception e){Log.e("log_tag", "Erreur pour la comparaison : "+e.toString());}
-		Log.d("Traitement - Comparaison", "c="+Voice_Sens);
+		Log.d("Traitement - Comparaison", "c="+voice_Sens);
 		Log.d("Traitement - Comparaison", "n="+n);
-		if(c<Voice_Sens){n=-1;} // Compare en fonction de la sensibilité (cf option)
+		if(c<voice_Sens){n=-1;} // Compare en fonction de la sensibilité (cf option)
 		return n;} // Retourne le résultat
 	
 	public static String HTTP_Contact(String URL, Context context){
@@ -88,23 +88,23 @@ public class Traitement {
 			JSONObject Rep = commands.getJSONObject(0); // Importe la première valeur
 			String type = Rep.getString("type");
 				
-			if(type.compareTo("talk")==0) Reponse=Rep.getString("sentence");
+			if(type.compareTo("talk")==0) reponse=Rep.getString("sentence");
 			
 			else if (Rep.getString("type").compareTo("sound")==0){
 				String Son = Rep.getString("file");
 				Son = Son.replace(".wav","");
-				Reponse="*"+Son+"*";
-				Media_Player(Son, context);}
+				reponse="*"+Son+"*";
+				media_Player(Son, context);}
 				
 			for (int i = 1; i < commands.length(); i++) { // Importe les autres valeurs s'il y en a
 				JSONObject emp = commands.getJSONObject(i);
 				if("talk".compareTo(emp.getString("type"))==0){
-					Reponse=Reponse+" \n"+emp.getString("sentence");}
+					reponse=reponse+" \n"+emp.getString("sentence");}
 				else if (Rep.getString("type").compareTo("sound")==0){
 					String Son = emp.getString("file");
 					Son = Son.replace(".wav","");
-					Reponse=Reponse+" \n"+"*"+Son+"*";
-					Media_Player(Son, context);}	
+					reponse=reponse+" \n"+"*"+Son+"*";
+					media_Player(Son, context);}	
 				}
 			}
 			catch(JSONException e){e.printStackTrace();}
@@ -112,30 +112,30 @@ public class Traitement {
 				try{
 					JSONArray commands = json.getJSONArray("error");
 					JSONObject Rep = commands.getJSONObject(0); // Importe la première valeur
-					Reponse=Rep.getString("error");}
+					reponse=Rep.getString("error");}
 				catch(JSONException x){e.printStackTrace();}
 				catch(Exception x){
-					Reponse="Il y a eu une erreur lors du contact avec le Raspberry Pi.";}
+					reponse="Il y a eu une erreur lors du contact avec le Raspberry Pi.";}
 				}
 
-    	return Reponse;}
+    	return reponse;}
 	
-	public static boolean pick_JSON(String IPadress, String Token){
+	public static boolean pick_JSON(String iPadress, String token){
 		retour=true;
 
-		Commandes.clear();
-        Parameter = new HashMap<String, ArrayList<String>>();
+		commandes.clear();
+        parameter = new HashMap<String, ArrayList<String>>();
 		
-		Categories.clear();
-		Identifiant_cat.clear();
+		categories.clear();
+		identifiant_cat.clear();
 		
         listDataChild = new HashMap<String, ArrayList<String>>();
-	 	Commandes_a.clear();
+	 	commandes_a.clear();
 
-	 	try{json = new JsonParser().execute("http://"+IPadress+"?action=GET_SPEECH_COMMAND&token="+Token).get();}
+	 	try{json = new JsonParser().execute("http://"+iPadress+"?action=GET_SPEECH_COMMAND&token="+token).get();}
 	 	catch(Exception e){}
 	 	
-	 	ArrayList<String> Links = new ArrayList<String>();
+	 	ArrayList<String> links = new ArrayList<String>();
 	 	
 	 	if(retour){
 	 		Log.d("","Début du traitement du JSON");
@@ -143,11 +143,11 @@ public class Traitement {
 				for(int i = 0; i < commands.length(); i++) {
 					JSONObject emp = commands.getJSONObject(i);
 
-			 		ArrayList<String> Params = new ArrayList<String>();
+			 		ArrayList<String> params = new ArrayList<String>();
 					
-					String Command=emp.getString("command");
-					Command = Command.replace("&#039;", "'");
-					Command = Command.replace("eteint", "éteint");
+					String command=emp.getString("command");
+					command = command.replace("&#039;", "'");
+					command = command.replace("eteint", "éteint");
 					
 					String URL = emp.getString("url");
 					URL = URL.replace("{", "%7B");
@@ -155,9 +155,9 @@ public class Traitement {
 					StringTokenizer tokens = new StringTokenizer(URL, "?");
 					tokens.nextToken();
 					URL = tokens.nextToken();
-					Params.add(URL);
+					params.add(URL);
 					
-					Params.add(emp.getString("confidence"));
+					params.add(emp.getString("confidence"));
 					
 					String type="", contenu="";
 					try{
@@ -168,86 +168,86 @@ public class Traitement {
 							contenu = emp.getString("file");
 							contenu = contenu.replace(".wav", "");
 							contenu = contenu.replace(".mp3", "");}
-						Params.add(type);
-						Params.add(contenu);}
+						params.add(type);
+						params.add(contenu);}
 					catch(Exception e){}
 					
 					if(!URL.contains("vocalinfo_devmod")){
-						Commandes.add(Command);
-						Links.add(URL);
-						Parameter.put(Command,Params);}
+						commandes.add(command);
+						links.add(URL);
+						parameter.put(command,params);}
 				}
 			}
 		
 		 	catch(JSONException e){
-				Verification_erreur();
+				verification_erreur();
 				retour=false;}
 		 	
 			catch(Exception e){
-				Verification_erreur();
+				verification_erreur();
 				retour=false;}
 
-		 	Add_Commandes(true);
+		 	add_Commandes(true);
 		 	
-		 	Commandes_a = new ArrayList<String>(Commandes);
+		 	commandes_a = new ArrayList<String>(commandes);
 		 	
 		 	int x=0;
-		 	while(Commandes_a.size()!=Links.size()){
-		 		Links.add(x, "");
+		 	while(commandes_a.size()!=links.size()){
+		 		links.add(x, "");
 		 		x++;}
 		 	
-		 	for (int y=Categories.size()-1; y>=0; y--){
-		 		ArrayList<String> Reco = new ArrayList<String>();
-		 		for(int i=Commandes_a.size()-1; i>=0; i--){
-					if(Links.get(i).toLowerCase().contains(Identifiant_cat.get(y).toLowerCase()) || Commandes_a.get(i).toLowerCase().contains(Identifiant_cat.get(y).toLowerCase())){
-						Reco.add(Commandes_a.get(i));
-						Commandes_a.remove(i);
-						Links.remove(i);}
+		 	for (int y=categories.size()-1; y>=0; y--){
+		 		ArrayList<String> reco = new ArrayList<String>();
+		 		for(int i=commandes_a.size()-1; i>=0; i--){
+					if(links.get(i).toLowerCase().contains(identifiant_cat.get(y).toLowerCase()) || commandes_a.get(i).toLowerCase().contains(identifiant_cat.get(y).toLowerCase())){
+						reco.add(commandes_a.get(i));
+						commandes_a.remove(i);
+						links.remove(i);}
 				}
-	 			Log.d("Reco","Reco : "+Reco);
-		 		if(Reco.size()>0){
-		 			Collections.reverse(Reco); 
-		 			listDataChild.put(Categories.get(y), Reco);}
+	 			Log.d("Reco","Reco : "+reco);
+		 		if(reco.size()>0){
+		 			Collections.reverse(reco); 
+		 			listDataChild.put(categories.get(y), reco);}
 		 		else{ 
-		 			Log.d("Remove","Remove : "+Categories.get(y));
-		 			Categories.remove(y);}
+		 			Log.d("Remove","Remove : "+categories.get(y));
+		 			categories.remove(y);}
 		 	}
 	 	}
 	 	else{
-		 	ArrayList<String> Params = new ArrayList<String>();
-		 	String Command = "Echec du contact avec le serveur. Veuillez vérifier votre système et l'adresse entrée. Il est possible aussi que votre connexion est trop lente.";
-	 		Commandes.add(Command);
-	 		Params.add(""); // Initialise un URL
-	 		Params.add(""); // Initialise une confidence
-	 		Parameter.put(Command, Params);
+		 	ArrayList<String> params = new ArrayList<String>();
+		 	String command = "Echec du contact avec le serveur. Veuillez vérifier votre système et l'adresse entrée. Il est possible aussi que votre connexion est trop lente.";
+	 		commandes.add(command);
+	 		params.add(""); // Initialise un URL
+	 		params.add(""); // Initialise une confidence
+	 		parameter.put(command, params);
 	 		
-	 		Add_Commandes(false);}
+	 		add_Commandes(false);}
 		
 		return retour;}
 	
-	static boolean Verification_erreur(){
+	static boolean verification_erreur(){
 		Log.d(TAG, "Regarde s'il n'y a pas une erreur disponible.");
 		
-		ArrayList<String> Params = new ArrayList<String>();
-		String Command = null;
- 		Params.add(""); // Initialise un URL
- 		Params.add(""); // Initialise une confidence
+		ArrayList<String> params = new ArrayList<String>();
+		String command = null;
+ 		params.add(""); // Initialise un URL
+ 		params.add(""); // Initialise une confidence
 				
 		try{
-			if(json.getString("error").compareTo("insufficient permissions")==0 || json==null) Command = "Vous n'avez pas les droits nécéssaires pour effectuer cette action. Contactez votre administrateur.";
-			if(json.getString("error").compareTo("invalid or missing token")==0 || json==null) Command = "Votre Token est invalide. Veuillez le vérifier.";
+			if(json.getString("error").compareTo("insufficient permissions")==0 || json==null) command = "Vous n'avez pas les droits nécéssaires pour effectuer cette action. Contactez votre administrateur.";
+			if(json.getString("error").compareTo("invalid or missing token")==0 || json==null) command = "Votre Token est invalide. Veuillez le vérifier.";
 		}
 		catch(JSONException x){}
 		catch(Exception x){}
 		
 	Log.d(TAG, "Echec de toute compréhension.");
-	if(Command==null) Command="Echec de compréhension par rapport à la réponse du Raspberry Pi. Veuillez présenter le problème à Nover.";
+	if(command==null) command="Echec de compréhension par rapport à la réponse du Raspberry Pi. Veuillez présenter le problème à Nover.";
 		
-	Commandes.add(Command);
-	Parameter.put(Command, Params);
+	commandes.add(command);
+	parameter.put(command, params);
 	return false;}
 
-	public static boolean Verif_Reseau(Context context){ // Vérifie le réseau local
+	public static boolean verif_Reseau(Context context){ // Vérifie le réseau local
 		try{WifiManager wifiManager = (WifiManager) context.getSystemService(Context.WIFI_SERVICE);
 		    WifiInfo wifiInfo = wifiManager.getConnectionInfo();
 		    ConnectivityManager connec = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
@@ -271,97 +271,97 @@ public class Traitement {
 		return false;
 	}
 	
-	public static boolean Verif_aux(String Commande, Context context){
+	public static boolean verif_aux(String commande, Context context){
 		SharedPreferences.Editor geted = PreferenceManager.getDefaultSharedPreferences(context).edit();
 		
-		if(Commande.contains("cache-toi")){
+		if(commande.contains("cache-toi")){
 			geted.putBoolean("shake", false);
 			geted.commit();
 			if(Yana.servstate==true){
 				context.stopService(Yana.mShakeService);
-				Rep="Le ShakeService est maintenant désactivé.";}
-			else{Rep="Votre service est déjà désactivé.";}
+				rep="Le ShakeService est maintenant désactivé.";}
+			else{rep="Votre service est déjà désactivé.";}
 			return true;}
 		
-		else if(Commande.contains("montre-toi")){
+		else if(commande.contains("montre-toi")){
 			geted.putBoolean("shake", true);
 			geted.commit();
 			if(Yana.servstate==false){
 				context.startService(Yana.mShakeService);
-				Rep="Le ShakeService est maintenant activé.";}
-			else{Rep="Votre service est déjà activé.";}
+				rep="Le ShakeService est maintenant activé.";}
+			else{rep="Votre service est déjà activé.";}
 			return true;}
 		
-		else if(Commande.contains("désactive les événements")){
+		else if(commande.contains("désactive les événements")){
 			geted.putBoolean("event", false);
 			geted.commit();
 			if(Yana.eventstate==true){
 				context.stopService(Yana.mEventService);
-				Rep="Les événements sont maintenant désactivés.";}
-			else{Rep="Les événements sont déjà désactivés.";}
+				rep="Les événements sont maintenant désactivés.";}
+			else{rep="Les événements sont déjà désactivés.";}
 			return true;}
 		
-		else if(Commande.contains("active les événements")){
+		else if(commande.contains("active les événements")){
 			geted.putBoolean("event", true);
 			geted.commit();
 			if(Yana.eventstate==false){
 				context.startService(Yana.mEventService);
 	    		EventService.first=false;
-				Rep="Les événements sont maintenant activés.";}
-			else{Rep="Les événements sont déjà activés.";}
+				rep="Les événements sont maintenant activés.";}
+			else{rep="Les événements sont déjà activés.";}
 			return true;}
 		
-		else if(Commande.contains("Changelog_do")){
+		else if(commande.contains("Changelog_do")){
 			geted.putString("version", Yana.version);
 			geted.commit();
 			return true;}
 		
 		return false;}
 	
-	public static void Add_Commandes(boolean Full){
+	public static void add_Commandes(boolean full){
 		int i=0;
-		ArrayList<String> Params = new ArrayList<String>();
-		Params.add("");
-		Params.add("0.7");
-		String Command;
+		ArrayList<String> params = new ArrayList<String>();
+		params.add("");
+		params.add("0.7");
+		String command;
 		
-		Command = "YANA, montre-toi.";
-		Commandes.add(i, Command);
-		Parameter.put(Command, Params);
+		command = "YANA, montre-toi.";
+		commandes.add(i, command);
+		parameter.put(command, params);
 		i++;
 		
-		Command = "YANA, cache-toi.";
-		Commandes.add(i, Command);
-		Parameter.put(Command, Params);
+		command = "YANA, cache-toi.";
+		commandes.add(i, command);
+		parameter.put(command, params);
 		i++;
 		
-		Command = "YANA, active les événements.";
-		Commandes.add(i, Command);
-		Parameter.put(Command, Params);
+		command = "YANA, active les événements.";
+		commandes.add(i, command);
+		parameter.put(command, params);
 		i++;
 		
-		Command = "YANA, désactive les événements.";
-		Commandes.add(i, Command);
-		Parameter.put(Command, Params);
+		command = "YANA, désactive les événements.";
+		commandes.add(i, command);
+		parameter.put(command, params);
 		i++;
 		
-		if(Full){
-			Categories.add("XBMC");
-			Identifiant_cat.add("XBMC");
+		if(full){
+			categories.add("XBMC");
+			identifiant_cat.add("XBMC");
 			
-			Categories.add("Sons");
-			Identifiant_cat.add("vocalinfo_sound");
+			categories.add("Sons");
+			identifiant_cat.add("vocalinfo_sound");
 			
-			Categories.add("Relais radio");
-			Identifiant_cat.add("radioRelay_change_state");
+			categories.add("Relais radio");
+			identifiant_cat.add("radioRelay_change_state");
 		
-			Categories.add("Ceci est ajouté uniquement pour éviter de faire des erreurs (car l'ArrayList serait vide)");
-			Identifiant_cat.add("Ceci est ajouté uniquement pour éviter de faire des erreurs (car l'ArrayList serait vide)");}
+			categories.add("Ceci est ajouté uniquement pour éviter de faire des erreurs (car l'ArrayList serait vide)");
+			identifiant_cat.add("Ceci est ajouté uniquement pour éviter de faire des erreurs (car l'ArrayList serait vide)");}
 		}
 	
-	public static void Media_Player(String Son, Context context){
-		Sons = true;
-		int ID = context.getResources().getIdentifier(Son, "raw", "fr.nover.yana");
+	public static void media_Player(String son, Context context){
+		sons = true;
+		int ID = context.getResources().getIdentifier(son, "raw", "fr.nover.yana");
 		
 		MediaPlayer mp = MediaPlayer.create(context, ID); 
 		mp.setWakeMode(context, PowerManager.PARTIAL_WAKE_LOCK);
