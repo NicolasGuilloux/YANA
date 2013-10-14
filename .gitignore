@@ -1,0 +1,10 @@
+bin
+.settings/
+.classpath
+/.project
+project.properties
+
+out/
+gen/
+*.apk
+*.key
