@@ -57,7 +57,7 @@ public class Assistant_Installation extends FragmentActivity implements
     private List<Page> mCurrentPageSequence;
     private StepPagerStrip mStepPagerStrip;
     
-    Intent Config;
+    Intent config;
 
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);

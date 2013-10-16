@@ -36,6 +36,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Random;
 
+import fr.nover.yana.model.User;
 import fr.nover.yana.passerelles.SpeechRecognizerWrapper.RecognizerFinishedCallback;
 import fr.nover.yana.passerelles.SpeechRecognizerWrapper.RecognizerState;
 import fr.nover.yana.passerelles.Traitement;
@@ -53,11 +54,11 @@ public class ShakeService extends Service implements TextToSpeech.OnInitListener
     
     private TextToSpeech mTts; // Déclare le TTS
     boolean TTS_Box; // Permet de savoir si le TTS est autorisé
-	boolean Speech_continu;
+	boolean speech_continu;
     Random random = new Random(); // Pour un message aléatoire
-    String Nom, Prénom, Sexe, Pseudo; // Pour l'identité de l'utilisateur
+    User user; // Pour l'identité de l'utilisateur
     
-	String A_envoyer, A_dire="", IPadress, Token; // Déclare les deux variables de conversation et l'adresse IP
+	String a_envoyer, a_dire="", iPadress, token; // Déclare les deux variables de conversation et l'adresse IP
     
     Boolean last_init=false, last_shake=false; // Déclare les variables pour éviter les doublons d'initialisation et Shake
     
@@ -71,9 +72,9 @@ public class ShakeService extends Service implements TextToSpeech.OnInitListener
  	private static SpeechRecognizer speech = null;
  	
  		// Déclare les contacts avec l'activité Yana
- 	Intent NewRecrep = new Intent("NewRecrep"); 
- 	Intent NewRep = new Intent("NewRep");
- 	Intent Post_speech = new Intent("Post_speech");
+ 	Intent newRecrep = new Intent("NewRecrep"); 
+ 	Intent newRep = new Intent("NewRep");
+ 	Intent post_speech = new Intent("Post_speech");
  	
  		// Valeur de retour de la Comparaison
  	int n=-1;
@@ -95,7 +96,7 @@ public class ShakeService extends Service implements TextToSpeech.OnInitListener
             	if(last_shake==false && ScreenReceiver.wasScreenOn){
             		last_shake=true;
             		getConfig();
-            		A_dire=Random_String();
+            		a_dire=random_String();
             		getTTS();}
         }});
         
@@ -112,8 +113,8 @@ public class ShakeService extends Service implements TextToSpeech.OnInitListener
         fin();
 
         SharedPreferences preferences= PreferenceManager.getDefaultSharedPreferences(this);
-		Speech_continu=preferences.getBoolean("continu", false);
-		Log.d("Speech_continu","Speech_continu : "+Speech_continu);}
+		speech_continu=preferences.getBoolean("continu", false);
+		Log.d("Speech_continu","Speech_continu : "+speech_continu);}
 
     public void onDestroy() { // En cas d'arrêt du service
         super.onDestroy();
@@ -133,7 +134,7 @@ public class ShakeService extends Service implements TextToSpeech.OnInitListener
     
 	public void onInit(int status) { // En cas d'initialisation (après avoir initialisé le TTS)
 		
-		Toast t = Toast.makeText(getApplicationContext(),A_dire,Toast.LENGTH_SHORT); // Affiche la phrase dites par votre téléphone
+		Toast t = Toast.makeText(getApplicationContext(),a_dire,Toast.LENGTH_SHORT); // Affiche la phrase dites par votre téléphone
 		t.show();
 		
 		if(TTS_Box && Yana.servstate){ // Si on autorise le TTS
@@ -146,7 +147,7 @@ public class ShakeService extends Service implements TextToSpeech.OnInitListener
             //int amStreamMusicMaxVol = am.getStreamMaxVolume(am.STREAM_MUSIC);
             //am.setStreamVolume(am.STREAM_MUSIC, amStreamMusicMaxVol, 0);
             
-			mTts.speak(A_dire,TextToSpeech.QUEUE_FLUSH, myHashAlarm);} // Il dicte sa phrase
+			mTts.speak(a_dire,TextToSpeech.QUEUE_FLUSH, myHashAlarm);} // Il dicte sa phrase
 		}
 
 	@Override
@@ -157,11 +158,11 @@ public class ShakeService extends Service implements TextToSpeech.OnInitListener
 			mSpeechRecognizerWrapper.Stop();
         	last_init=true;}
 		
-		else if(Speech_continu){ // Si il n'a pas déjà initialisé le processus de reconnaissance vocale
+		else if(speech_continu){ // Si il n'a pas déjà initialisé le processus de reconnaissance vocale
 			myHandler.postDelayed(new Runnable(){
 				@Override
 				public void run() {
-					LocalBroadcastManager.getInstance(context).sendBroadcast(Post_speech);
+					LocalBroadcastManager.getInstance(context).sendBroadcast(post_speech);
 				}}, 250);
 			}
 		else{fin();} // Sinon il remet tout à 0
@@ -171,45 +172,46 @@ public class ShakeService extends Service implements TextToSpeech.OnInitListener
 
 	public IBinder onBind(Intent arg0) {return null;}
     		
-	public String Random_String(){ // Choisit une chaine de caractères au hasard
+	public String random_String(){ // Choisit une chaine de caractères au hasard
 		ArrayList<String> list = new ArrayList<String>();
 		list.add("Comment puis-je vous aider, boss ?");
 		list.add("Un truc à dire, ma poule ?!");
 		
-		if(Prénom.compareTo("")!=0){
-			list.add("Oui, "+Prénom+" ?");}
+		if(user.prenom!= ""){
+			list.add("Oui, "+user.prenom+" ?");}
 		
-		if(Nom.compareTo("")!=0){
-			list.add("Que voulez-vous, maître "+Nom+" ?");}
+		if(user.nom!= ""){
+			list.add("Que voulez-vous, maître "+user.nom+" ?");}
 		
-		if(Sexe.compareTo("")!=0){
-			list.add("Puis-je faire quelque chose pour vous, "+ Sexe+" ?");}
+		if(user.sexe !=""){
+			list.add("Puis-je faire quelque chose pour vous, "+ user.sexe+" ?");}
 		
-		if(Nom.compareTo("")!=0 && Sexe.compareTo("")!=0){
-			list.add(Sexe+" "+Nom+", je suis tout à vous !");}
+		if(user.nom.compareTo("")!=0 && user.sexe.compareTo("")!=0){
+			list.add(user.sexe+" "+user.nom+", je suis tout à vous !");}
 		
-		if(Pseudo.compareTo("")!=0){
-			list.add("Que veux-tu, mon petit "+Pseudo+" ?");}
+		if(user.pseudo!=""){
+			list.add("Que veux-tu, mon petit "+user.pseudo+" ?");}
 		
 		int randomInt = random.nextInt(list.size());
-        String Retour = list.get(randomInt).toString();
+        String retour = list.get(randomInt).toString();
 		
-		return Retour;}
+		return retour;}
 	
 	public void getConfig(){ // Importe les options
 		SharedPreferences preferences= PreferenceManager.getDefaultSharedPreferences(this);
-		if(Traitement.Verif_Reseau(getApplicationContext())){
-			IPadress=preferences.getString("IPadress", "");} // Importe l'adresse du RPi
-    	else{IPadress=preferences.getString("IPadress_ext", "");}
+		if(Traitement.verif_Reseau(getApplicationContext())){
+			iPadress=preferences.getString("IPadress", "");} // Importe l'adresse du RPi
+    	else{iPadress=preferences.getString("IPadress_ext", "");}
 		
-		Token=preferences.getString("token", "");
+		token=preferences.getString("token", "");
 		TTS_Box=preferences.getBoolean("tts_pref", true);
-		Speech_continu=preferences.getBoolean("continu", true);
+		speech_continu=preferences.getBoolean("continu", true);
 		
-		Nom=preferences.getString("name", ""); // Importe l'identité de la personne
-		Prénom=preferences.getString("surname", "");
-		Sexe=preferences.getString("sexe", "");
-		Pseudo=preferences.getString("nickname", "");}
+		user = new User();
+		user.nom=preferences.getString("name", ""); // Importe l'identité de la personne
+		user.prenom=preferences.getString("surname", "");
+		user.sexe=preferences.getString("sexe", "");
+		user.pseudo=preferences.getString("nickname", "");}
 
 	public void onEvent(int arg0, Bundle arg1){}
 
@@ -223,7 +225,7 @@ public class ShakeService extends Service implements TextToSpeech.OnInitListener
 		if(n==0){ // Si "Yana, cache-toi"
 			this.stopSelf();}
 		
-		else if(Speech_continu){
+		else if(speech_continu){
 			last_shake=true;
 			last_init=true;}
 		}	
@@ -231,7 +233,7 @@ public class ShakeService extends Service implements TextToSpeech.OnInitListener
     public void onRecognizerFinished(String Resultat) {
         Log.d(TAG,"Ordre : " + Resultat);
         
-        if(!Speech_continu){
+        if(!speech_continu){
         	mSpeechRecognizerWrapper.Stop();
         	last_init=true;}
 
@@ -239,32 +241,32 @@ public class ShakeService extends Service implements TextToSpeech.OnInitListener
 			speech.destroy();
 			speech = null;}
         
-		A_dire="";
+		a_dire="";
 		
-		String Ordre="", URL="";
-		n = Traitement.Comparaison(Resultat); // Compare les deux chaines de caractères
+		String ordre="", URL="";
+		n = Traitement.comparaison(Resultat); // Compare les deux chaines de caractères
 		Log.d(TAG,"Numéro sortant : " + n);
 		if(n<0){ // Si échec, Ordre=Resultat
-			Ordre=Resultat;
-			A_dire="Aucun ordre ne semble être identifié au votre.";}
+			ordre=Resultat;
+			a_dire="Aucun ordre ne semble être identifié au votre.";}
 		else{ // Sinon...
-			Ordre = Traitement.Commandes.get(n);} // Ordre prend la valeur de la commande choisie
+			ordre = Traitement.commandes.get(n);} // Ordre prend la valeur de la commande choisie
 	 	
-		NewRecrep.putExtra("contenu", Ordre); // Envoie l'ordre à l'interface
-	 	LocalBroadcastManager.getInstance(this).sendBroadcast(NewRecrep);
+		newRecrep.putExtra("contenu", ordre); // Envoie l'ordre à l'interface
+	 	LocalBroadcastManager.getInstance(this).sendBroadcast(newRecrep);
 	 	
 	 	if(n>0){ // Si l'ordre est valable
-	 		if(Traitement.Verif_aux(Ordre,context)) A_dire=Traitement.Rep;
+	 		if(Traitement.verif_aux(ordre,context)) a_dire=Traitement.rep;
 	 		else{
 	 			
-	 			ArrayList<String> Params = Traitement.Parameter.get(Ordre);
+	 			ArrayList<String> Params = Traitement.parameter.get(ordre);
 	 	    	
 	 	    	if(Params.size()>2){
 	 	        	String Reponse="";
 	 	    		String type = Params.get(2);
 	 	    		if(type.compareTo("talk")==0){
 	 	    			Reponse = Params.get(3);
-	 		    		if(!Traitement.Sons) getTTS();}
+	 		    		if(!Traitement.sons) getTTS();}
 	 	    		else if(type.compareTo("sound")==0){
 	 	    			String Son = Params.get(3);
 	 	    			Reponse = "*"+Son+"*";
@@ -277,12 +279,12 @@ public class ShakeService extends Service implements TextToSpeech.OnInitListener
 	 	    		}
 
 	 	        if(Reponse.compareTo("")==0){
-	 	        	NewRep.putExtra("contenu", Reponse); // Envoie de la réponse à l'interface
-	 			 	LocalBroadcastManager.getInstance(this).sendBroadcast(NewRep);}
+	 	        	newRep.putExtra("contenu", Reponse); // Envoie de la réponse à l'interface
+	 			 	LocalBroadcastManager.getInstance(this).sendBroadcast(newRep);}
 	 	        }
 	 	    	
 	 			
-				URL = Traitement.Parameter.get(Ordre).get(0);
+				URL = Traitement.parameter.get(ordre).get(0);
 		 
 		    	ConnectivityManager cm = (ConnectivityManager) getApplicationContext()
 	                    .getSystemService(Context.CONNECTIVITY_SERVICE);
@@ -290,19 +292,19 @@ public class ShakeService extends Service implements TextToSpeech.OnInitListener
 	            NetworkInfo activeNetwork = cm.getActiveNetworkInfo();
 	            
 		    	if(activeNetwork!=null){ // Vérifie le réseau
-		    		A_dire = Traitement.HTTP_Contact("http://"+IPadress+"?"+URL+"&token="+Token, getApplicationContext());} // Envoie au RPi et enregistre sa réponse
+		    		a_dire = Traitement.HTTP_Contact("http://"+iPadress+"?"+URL+"&token="+token, getApplicationContext());} // Envoie au RPi et enregistre sa réponse
 	        	else{
 	        		Toast toast= Toast.makeText(getApplicationContext(), // En cas d'échec, il prévient l'utilisateur
 	    			    	"Vous n'avez pas de connexion internet !", 4000);  
 	    					toast.setGravity(Gravity.TOP|Gravity.CENTER_HORIZONTAL, 0, 80);
 	    					toast.show();}}}
 		
-		if(A_dire.compareTo("")!=0){
-			NewRep.putExtra("contenu", A_dire); // Envoie de la réponse à l'interface
-		 	LocalBroadcastManager.getInstance(this).sendBroadcast(NewRep);}
-		else{A_dire=" ";}
-		if(!Traitement.Sons) getTTS();
-		else Traitement.Sons=false;}
+		if(a_dire.compareTo("")!=0){
+			newRep.putExtra("contenu", a_dire); // Envoie de la réponse à l'interface
+		 	LocalBroadcastManager.getInstance(this).sendBroadcast(newRep);}
+		else{a_dire=" ";}
+		if(!Traitement.sons) getTTS();
+		else Traitement.sons=false;}
     																													
     @Override
     public void onRecognizerStateChanged(RecognizerState state) {

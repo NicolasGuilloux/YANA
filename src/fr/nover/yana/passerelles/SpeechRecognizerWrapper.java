@@ -31,7 +31,7 @@ public class SpeechRecognizerWrapper implements RecognitionListener{
 		// Temps avant arrêt de la reconnaissance
 	private Timer 					   speechTimeout = null;
 	
- 	private BroadcastReceiver Post_speech = new BroadcastReceiver() { 
+ 	private BroadcastReceiver post_speech = new BroadcastReceiver() { 
 		  @Override
 		  public void onReceive(Context context, Intent intent) {
 			Start();}};
@@ -45,7 +45,7 @@ public class SpeechRecognizerWrapper implements RecognitionListener{
     }
     
     public void Broad(Context context){
-	    LocalBroadcastManager.getInstance(context).registerReceiver(Post_speech,
+	    LocalBroadcastManager.getInstance(context).registerReceiver(post_speech,
 				new IntentFilter("Post_speech"));
     }
 

@@ -178,24 +178,24 @@ public class ReviewFragment extends ListFragment implements ModelCallbacks {
             if(value.compareTo("(None)")==0){value="";}
             
             if(type.compareTo("Nom")==0){
-				get_config.Nom=value;}
+				get_config.nom=value;}
             
 			else if(type.compareTo("Prénom")==0){
-				get_config.Prénom=value;}
+				get_config.prenom=value;}
             
 			else if(type.compareTo("Pseudonyme")==0){
-				get_config.Pseudonyme=value;}
+				get_config.pseudonyme=value;}
             
 			else if(type.compareTo("Vous êtes un(e)...")==0){
 				Log.d("Réussite !", value);
 				if(value.compareTo("")==0){
-					get_config.Sexe=3;}
+					get_config.sexe=3;}
 				else if(value.compareTo("Mademoiselle")==0){
-					get_config.Sexe=0;}
+					get_config.sexe=0;}
 				else if(value.compareTo("Madame")==0){
-					get_config.Sexe=1;}
+					get_config.sexe=1;}
 				else if(value.compareTo("Monsieur")==0){
-					get_config.Sexe=2;}}
+					get_config.sexe=2;}}
             
 			else if(type.compareTo("Lien interne")==0){
 				get_config.IPAdress=value;}
@@ -210,20 +210,20 @@ public class ReviewFragment extends ListFragment implements ModelCallbacks {
 			else if(type.compareTo("Vous voulez activer ...")==0){
 				
 				if(value.contains("ShakeService")){
-					get_config.ShakeService=true;}
-				else{get_config.ShakeService=false;}
+					get_config.shakeService=true;}
+				else{get_config.shakeService=false;}
 				
 				if(value.contains("événements")){
-					get_config.EventService=true;}
-				else{get_config.EventService=false;}
+					get_config.eventService=true;}
+				else{get_config.eventService=false;}
 				
 				if(value.contains("synthèse")){
 					get_config.TTS=true;}
 				else{get_config.TTS=false;}
 
 				if(value.contains("commandes")){
-					get_config.Update_Com=true;}
-				else{get_config.Update_Com=false;}}
+					get_config.update_Com=true;}
+				else{get_config.update_Com=false;}}
             
 			else if(type.contains("Internet")){
 				if(value.compareTo("Oui")==0){get_config.externe=true;}

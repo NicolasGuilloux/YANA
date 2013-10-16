@@ -24,12 +24,21 @@
         android:name="Bug" >
    		
         <activity
+            android:name="fr.nover.yana.SplashScreen"
+   			android:screenOrientation="portrait"
+   			android:theme="@android:style/Theme.Light.NoTitleBar.Fullscreen" >
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+        
+         <activity
             android:name="fr.nover.yana.Yana"
             android:label="@string/app_name"
    			android:screenOrientation="portrait" >
             <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LAUNCHER" />
+                <action android:name="fr.nover.yana.YANA" />
             </intent-filter>
         </activity>
         
