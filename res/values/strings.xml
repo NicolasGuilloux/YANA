@@ -31,6 +31,10 @@
     <string name="SSID_btn">Importer</string>
     <string name="ipadress_ext">Lien externe</string>
     
+     <!-- splash screen -->
+    <string name="splash_text">Yana</string>
+    <string name="splash_msg">DIY application</string>
+    
     <string name="Value1">Mademoiselle</string>
 	<string name="Value2">Madame</string>
 	<string name="Value3">Monsieur</string>
