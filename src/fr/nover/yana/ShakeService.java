@@ -75,6 +75,25 @@ public class ShakeService extends Service implements TextToSpeech.OnInitListener
  	Intent NewRep = new Intent("NewRep");
  	Intent Post_speech = new Intent("Post_speech");
  	
+ 	private BroadcastReceiver Fermeture = new BroadcastReceiver() { 
+		  @Override
+		  public void onReceive(Context context, Intent intent) {
+			Yana.servstate=false; // Définit l'état du service (éteint)
+		      	mSpeechRecognizerWrapper.Stop();
+		        mShakeDetector.setOnShakeListener(new OnShakeListener(){ // Arrête le Shake
+		            @Override
+		            public void onShake(int count) {
+		            	//Disable 
+		                }
+		            });
+		    if (mTts != null){ // Arrête de TTS
+		        mTts.stop();
+		        mTts.shutdown();}
+			fin();
+			mSpeechRecognizerWrapper.Stop();
+			stopSelf();
+		}};
+ 	
  		// Valeur de retour de la Comparaison
  	int n=-1;
  	
@@ -113,7 +132,10 @@ public class ShakeService extends Service implements TextToSpeech.OnInitListener
 
         SharedPreferences preferences= PreferenceManager.getDefaultSharedPreferences(this);
 		Speech_continu=preferences.getBoolean("continu", false);
-		Log.d("Speech_continu","Speech_continu : "+Speech_continu);}
+		Log.d("Speech_continu","Speech_continu : "+Speech_continu);
+		
+		LocalBroadcastManager.getInstance(this).registerReceiver(Fermeture,
+				new IntentFilter("Fermeture"));}
 
     public void onDestroy() { // En cas d'arrêt du service
         super.onDestroy();

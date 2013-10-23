@@ -109,6 +109,8 @@ public class Yana extends Activity implements TextToSpeech.OnInitListener{
 		  public void onReceive(Context context, Intent intent) {
 			String contenu = intent.getStringExtra("contenu");
 			conversation(contenu, "reponse");}};
+			
+	public static Intent Fermeture = new Intent("Fermeture");
 	    
 	    // Juste une valeur fixe de référence pour le résultat d'Activités lancées
 	protected static final int RESULT_SPEECH = 1;
@@ -123,6 +125,7 @@ public class Yana extends Activity implements TextToSpeech.OnInitListener{
 	 			new IntentFilter("NewRecrep"));
 	    LocalBroadcastManager.getInstance(this).registerReceiver(NewRep,
 				new IntentFilter("NewRep"));
+	    Fermeture.putExtra("contenu", "Evite un bug");
 
     	IPadress = (EditText)findViewById(R.id.IPadress); // Déclare les éléments visibles
     	tts_pref_false = (TextView) findViewById(R.id.tts_pref_false);
@@ -256,7 +259,13 @@ public class Yana extends Activity implements TextToSpeech.OnInitListener{
     				"Impossible de vérifier les langues de votre TTS. Yana va tout de même essayer de le lancer.",
     				Toast.LENGTH_SHORT);
     	        	t.show();
-    	        	if(Rep.compareTo("")!=0) mTts.speak(Rep,TextToSpeech.QUEUE_FLUSH, null); // Il dicte sa phrase
+    	        	if(Rep.compareTo("")!=0){
+    	        		try{mTts.speak(Rep,TextToSpeech.QUEUE_FLUSH, null);} // Il dicte sa phrase
+    	        		catch(Exception f){Toast t2 = Toast.makeText(getApplicationContext(),
+    	        				"Impossible de charger votre TTS. Veuillez vérifier s'il est bien installé ou disponible. Contactez Nover pour résoudre ce problème car il est très spécifique à votre appareil.",
+    	        				Toast.LENGTH_SHORT);
+    	        	        	t2.show();}
+    	        	}
     			    Rep="";}
 	}
 
@@ -314,9 +323,9 @@ public class Yana extends Activity implements TextToSpeech.OnInitListener{
     	mShakeService=new Intent(Yana.this, ShakeService.class); // Démarre le service en fonction de l'état de la box
     	boolean Box_shake=preferences.getBoolean("shake", false);
     	if((Box_shake==true) && servstate==false){startService(mShakeService);}
-    	else if((Box_shake==false) && servstate==true){stopService(mShakeService);}
+    	else if((Box_shake==false) && servstate==true){LocalBroadcastManager.getInstance(this).sendBroadcast(Fermeture);}
     	else if((Box_shake==true) && servstate==true){ // Réactualise les variables au cas où on passe d'une reco en continu à une reco par Shake
-    		stopService(mShakeService);
+    		LocalBroadcastManager.getInstance(this).sendBroadcast(Fermeture);
     		startService(mShakeService);}
     	
     	mEventService=new Intent(Yana.this, EventService.class); // Démarre le service en fonction de l'état de la box

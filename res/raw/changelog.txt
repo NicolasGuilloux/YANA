@@ -1,3 +1,9 @@
+Je vous encourage à entrer votre e-mail dans les options qui me servira à vous contacter lors d'une bug spécifique.
+
+Version 1.1.4c
+Debug : Arrêt propre du ShakeService
+Debug mineurs
+
 Version 1.1.4b
 Enorme débug dont celui du ShakeService (reconnaissance en continue fonctionnelle)
 

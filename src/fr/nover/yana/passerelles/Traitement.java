@@ -28,6 +28,7 @@ import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
 import android.os.PowerManager;
 import android.preference.PreferenceManager;
+import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -278,7 +279,7 @@ public class Traitement {
 			geted.putBoolean("shake", false);
 			geted.commit();
 			if(Yana.servstate==true){
-				context.stopService(Yana.mShakeService);
+				LocalBroadcastManager.getInstance(context).sendBroadcast(Yana.Fermeture);
 				Rep="Le ShakeService est maintenant désactivé.";}
 			else{Rep="Votre service est déjà désactivé.";}
 			return true;}

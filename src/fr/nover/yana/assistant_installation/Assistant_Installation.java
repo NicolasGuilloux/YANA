@@ -258,7 +258,8 @@ public class Assistant_Installation extends FragmentActivity implements
 
         @Override
         public int getCount() {
-            return Math.min(mCutOffPage + 1, mCurrentPageSequence.size() + 1);
+            try{return Math.min(mCutOffPage + 1, mCurrentPageSequence.size() + 1);}
+            catch (Exception e){return Math.min(mCutOffPage, mCurrentPageSequence.size());}
         }
 
         public void setCutOffPage(int cutOffPage) {
