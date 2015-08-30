@@ -1,10 +1,15 @@
-bin
+bin/
 .settings/
 .classpath
 /.project
 project.properties
 
+app/build/
+app/.idea/
+app/.gradle/
+app/*.iml
 out/
 gen/
 *.apk
 *.key
+*.db
