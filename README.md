@@ -1,7 +1,9 @@
+/!\ OBSOLETE. Voir : https://play.google.com/store/apps/details?id=com.roland.yana&hl=fr /!\
+
 YANA for Android
 ====
 
-Nouveau projet en relation avec la nouvelle installation d'Idleman. 
+Ancien projet en relation avec l'installation d'Idleman pour Raspberry Pi. 
 C'est la même fonction que Yuri mais celle-ci continuera son évolution et sera adaptée aux changements de l'installation d'Idleman.
 
 Celle application servira à interagir avec votre maison via le Rapsberry Pi (où sera installé Yana-Server d'Idleman).
